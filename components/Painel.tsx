@@ -10,6 +10,8 @@ import { STATUS, type Lead, type LeadInput, type Status } from '@/lib/types'
 import { RAIOS, distanceKm } from '@/lib/geo'
 import LeadCard from './LeadCard'
 import LeadForm from './LeadForm'
+import HistoricoContato from './HistoricoContato'
+import { todosLeads } from '@/lib/leads-api'
 
 export default function Painel() {
   const router = useRouter()
@@ -23,13 +25,14 @@ export default function Painel() {
   const usuario = useUsuario(), seuNome = usuario?.nome ?? ''
   const [form, setForm] = useState<{ lead: Lead | null } | null>(null)
   const [apagar, setApagar] = useState<Lead | null>(null)
+  const [historico, setHistorico] = useState<Lead | null>(null)
   const [aviso, setAviso] = useState('')
 
   const toast = (m: string) => { setAviso(m); setTimeout(() => setAviso(''), 3000) }
   async function carregar() {
-    const { data, error } = await supabase().from('leads').select('*').order('created_at', { ascending: false })
-    if (error) toast('Erro ao carregar leads: ' + error.message)
-    setLeads((data as Lead[]) || []); setLoading(false)
+    const { data, error } = await todosLeads()
+    if (error) toast('Erro ao carregar leads: ' + error)
+    setLeads(data); setLoading(false)
   }
   useEffect(() => { carregar() }, [])
 
@@ -101,10 +104,11 @@ export default function Painel() {
         {loading || !usuario ? <p className="text-slate-500">Carregando…</p> : lista.length === 0 ? <div className="card p-10 text-center text-slate-500"><Users className="mx-auto mb-2 text-slate-300" size={36} />Nenhum lead encontrado.<br /><span className="text-sm">Cadastre um lead ou use a aba Buscar lojas.</span></div> : (
           <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
             {lista.map(({ l, dist }) => <LeadCard key={l.id + l.status} lead={l} dist={dist} temRef={!!ref} seuNome={seuNome}
-              onEdit={() => setForm({ lead: l })} onDelete={() => setApagar(l)} toast={toast} />)}
+              onEdit={() => setForm({ lead: l })} onDelete={() => setApagar(l)} onHistorico={() => setHistorico(l)} toast={toast} />)}
           </div>)}
             {apagar && <ConfirmDialog titulo="Excluir lead?" texto={`"${apagar.nome_loja}" será removido e essa ação não pode ser desfeita.`}
         onCancel={() => setApagar(null)} onConfirm={async () => { await excluir(apagar); setApagar(null) }} />}
+      {historico && <HistoricoContato lead={historico} onClose={() => setHistorico(null)} />}
       {form && <LeadForm lead={form.lead} onSave={salvar} onCancel={() => setForm(null)} />}
       {aviso && <div className="fixed bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-md bg-slate-900 px-4 py-2 text-sm text-white">{aviso}</div>}
     </div>

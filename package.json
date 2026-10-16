@@ -14,9 +14,12 @@
   "next": "14.2.15",
   "react": "^18.3.1",
   "react-dom": "^18.3.1",
-  "lucide-react": "^0.453.0"
+  "leaflet": "^1.9.4",
+  "lucide-react": "^0.453.0",
+  "xlsx": "^0.18.5"
  },
  "devDependencies": {
+  "@types/leaflet": "^1.9.12",
   "@types/node": "^20",
   "@types/react": "^18",
   "@types/react-dom": "^18",

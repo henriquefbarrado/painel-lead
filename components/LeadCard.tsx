@@ -1,12 +1,12 @@
 'use client'
 import { useState } from 'react'
-import { Copy, MapPin, MessageCircle, Phone, Ruler, StickyNote } from 'lucide-react'
+import { Copy, History, MapPin, MessageCircle, Phone, Ruler, StickyNote } from 'lucide-react'
 import { STATUS, STATUS_COR, type Lead } from '@/lib/types'
 import { buildMessage, temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
 
-export default function LeadCard({ lead, dist, temRef, seuNome, onEdit, onDelete, toast }: {
+export default function LeadCard({ lead, dist, temRef, seuNome, onEdit, onDelete, onHistorico, toast }: {
   lead: Lead; dist: number | null; temRef: boolean; seuNome: string
-  onEdit: () => void; onDelete: () => void; toast: (m: string) => void }) {
+  onEdit: () => void; onDelete: () => void; onHistorico: () => void; toast: (m: string) => void }) {
   const [msg, setMsg] = useState(() => buildMessage(lead.nome_loja, seuNome, lead.status))
   const [aberto, setAberto] = useState(false)
   const tem = temMensagem(lead.status)
@@ -44,6 +44,7 @@ export default function LeadCard({ lead, dist, temRef, seuNome, onEdit, onDelete
         <button className="btn-wa" onClick={enviar}><MessageCircle size={15} />WhatsApp</button>
         <button className="btn" onClick={copiar}><Copy size={15} />Copiar mensagem</button>
         </>}
+        <button className="btn" onClick={onHistorico}><History size={15} />Histórico</button>
         <button className="btn" onClick={() => setAberto(!aberto)}>{aberto ? 'Ocultar' : 'Ver detalhes'}</button>
       </div>
       {aberto && (
