@@ -1,9 +1,19 @@
-// Para mudar o texto padrão da mensagem, edite só aqui.
-export const MESSAGE_TEMPLATE =
-  'Olá, tudo bem? Me chamo {SEU_NOME} e estou entrando em contato com a {NOME_DA_LOJA}. Gostaria de conversar com o responsável para apresentar uma solução que pode fazer sentido para o negócio de vocês. Quem seria a melhor pessoa para conversar sobre isso?'
+import type { Status } from './types'
 
-export function buildMessage(lojaNome: string, seuNome: string) {
-  return MESSAGE_TEMPLATE.replace('{SEU_NOME}', seuNome || '[SEU NOME]').replace('{NOME_DA_LOJA}', lojaNome)
+// Para mudar os textos, edite só aqui. Marcadores: {SEU_NOME} e {NOME_DA_LOJA}.
+// Status sem texto próprio (contato realizado, sem interesse, convertido) usam o texto de "novo".
+export const MESSAGES: Partial<Record<Status, string>> = {
+  novo:
+    'Olá, tudo bem? Me chamo {SEU_NOME} e estou entrando em contato com a {NOME_DA_LOJA}. Gostaria de conversar com o responsável para apresentar uma solução que pode fazer sentido para o negócio de vocês. Quem seria a melhor pessoa para conversar sobre isso?',
+  interessado:
+    'Olá, tudo bem? Aqui é {SEU_NOME}. Que bom saber que a {NOME_DA_LOJA} se interessou! Posso te mostrar como funcionaria na prática e já te passar valores e prazos? Se preferir, podemos marcar uma conversa rápida de 10 minutos, no melhor horário para você.',
+  negociacao:
+    'Olá, tudo bem? Aqui é {SEU_NOME}. Estou passando para saber se você conseguiu avaliar a nossa proposta para a {NOME_DA_LOJA}. Ficou alguma dúvida sobre valores, prazos ou funcionalidades? Posso ajustar o que for preciso para fecharmos da melhor forma. Qual o melhor momento para conversarmos?',
+}
+
+export function buildMessage(lojaNome: string, seuNome: string, status: Status = 'novo') {
+  const modelo = MESSAGES[status] ?? MESSAGES.novo!
+  return modelo.replace(/\{SEU_NOME\}/g, seuNome || '[SEU NOME]').replace(/\{NOME_DA_LOJA\}/g, lojaNome)
 }
 
 // Retorna só dígitos com DDI 55 (Brasil), ou null se o número for inválido.

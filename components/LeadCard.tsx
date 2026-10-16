@@ -7,7 +7,7 @@ import { buildMessage, whatsappLink, whatsappNumber } from '@/lib/message-templa
 export default function LeadCard({ lead, dist, temRef, seuNome, onEdit, onDelete, toast }: {
   lead: Lead; dist: number | null; temRef: boolean; seuNome: string
   onEdit: () => void; onDelete: () => void; toast: (m: string) => void }) {
-  const [msg, setMsg] = useState(() => buildMessage(lead.nome_loja, seuNome))
+  const [msg, setMsg] = useState(() => buildMessage(lead.nome_loja, seuNome, lead.status))
   const [aberto, setAberto] = useState(false)
   const semLoc = lead.latitude == null || lead.longitude == null
 

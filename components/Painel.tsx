@@ -100,7 +100,7 @@ export default function Painel() {
         </div>
         {loading ? <p className="text-slate-500">Carregando…</p> : lista.length === 0 ? <div className="card p-10 text-center text-slate-500"><Users className="mx-auto mb-2 text-slate-300" size={36} />Nenhum lead encontrado.<br /><span className="text-sm">Cadastre um lead ou use a aba Buscar lojas.</span></div> : (
           <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-            {lista.map(({ l, dist }) => <LeadCard key={l.id} lead={l} dist={dist} temRef={!!ref} seuNome={seuNome}
+            {lista.map(({ l, dist }) => <LeadCard key={l.id + l.status} lead={l} dist={dist} temRef={!!ref} seuNome={seuNome}
               onEdit={() => setForm({ lead: l })} onDelete={() => setApagar(l)} toast={toast} />)}
           </div>)}
             {apagar && <ConfirmDialog titulo="Excluir lead?" texto={`"${apagar.nome_loja}" será removido e essa ação não pode ser desfeita.`}
