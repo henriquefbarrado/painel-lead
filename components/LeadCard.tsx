@@ -2,13 +2,15 @@
 import { useState } from 'react'
 import { Copy, MapPin, MessageCircle, Phone, Ruler, StickyNote } from 'lucide-react'
 import { STATUS, STATUS_COR, type Lead } from '@/lib/types'
-import { buildMessage, whatsappLink, whatsappNumber } from '@/lib/message-template'
+import { buildMessage, temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
 
 export default function LeadCard({ lead, dist, temRef, seuNome, onEdit, onDelete, toast }: {
   lead: Lead; dist: number | null; temRef: boolean; seuNome: string
   onEdit: () => void; onDelete: () => void; toast: (m: string) => void }) {
   const [msg, setMsg] = useState(() => buildMessage(lead.nome_loja, seuNome, lead.status))
   const [aberto, setAberto] = useState(false)
+  const tem = temMensagem(lead.status)
+  const nota = lead.status === 'convertido' ? 'Cliente fechado. Nenhuma mensagem de venda necessária.' : 'Sem interesse. Não enviar mais mensagens para este lead.'
   const semLoc = lead.latitude == null || lead.longitude == null
 
   async function copiar() {
@@ -36,10 +38,12 @@ export default function LeadCard({ lead, dist, temRef, seuNome, onEdit, onDelete
         {temRef && <p className={linha}><Ruler size={15} className="mt-0.5 shrink-0 text-slate-400" />{semLoc ? <i className="text-amber-600">Localização precisa ser preenchida</i> : <b className="text-indigo-600">{dist!.toFixed(1)} km</b>}</p>}
         {lead.observacoes && <p className={linha}><StickyNote size={15} className="mt-0.5 shrink-0 text-slate-400" />{lead.observacoes}</p>}
       </div>
-      <textarea className="inp !bg-slate-50 text-slate-600" rows={4} value={msg} onChange={e => setMsg(e.target.value)} />
+      {tem ? <textarea className="inp !bg-slate-50 text-slate-600" rows={4} value={msg} onChange={e => setMsg(e.target.value)} /> : <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-500">{nota}</p>}
       <div className="flex flex-wrap gap-2">
+        {tem && <>
         <button className="btn-wa" onClick={enviar}><MessageCircle size={15} />WhatsApp</button>
         <button className="btn" onClick={copiar}><Copy size={15} />Copiar mensagem</button>
+        </>}
         <button className="btn" onClick={() => setAberto(!aberto)}>{aberto ? 'Ocultar' : 'Ver detalhes'}</button>
       </div>
       {aberto && (
