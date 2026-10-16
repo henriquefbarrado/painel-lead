@@ -10,6 +10,7 @@ Painel interno para organizar a prospecção comercial de lojas: cadastro de lea
 - **Indicadores**: total de leads, novos, contatados e interessados.
 - **Raio de distância**: escolha uma loja como referência e filtre as lojas em 1, 3, 5, 10, 20 ou 50 km (cálculo de Haversine, em linha reta). Lojas sem coordenadas aparecem como "Localização precisa ser preenchida".
 - **Mensagem de WhatsApp por status**: o card mostra um texto pronto, editável, com botões **Copiar mensagem** e **WhatsApp** (abre `wa.me` com o texto preenchido). Nada é enviado automaticamente. Veja [STATUS-DOS-LEADS.md](STATUS-DOS-LEADS.md).
+- **Modo envio**: fila com um lead por vez (respeitando os filtros), mensagem pronta e botão para abrir o WhatsApp. Você envia lá e volta para tocar em "Enviei, próximo"; leads Novos viram Contato realizado sozinhos. O envio continua manual.
 - **Nome por login**: o nome usado nas mensagens vem do e-mail de quem está logado (`lib/usuarios.ts`).
 - **Buscar lojas sem site**: pesquisa negócios por segmento e cidade/bairro (OpenWeb Ninja, grátis, ou Google Places) e mostra só os que não têm site próprio (quem só tem Instagram, Facebook ou link de WhatsApp conta como sem site). Dá para adicionar o resultado direto aos leads.
 - **Financeiro**: receitas, despesas, lucro do mês, lucro total, gráfico dos últimos 6 meses e lista de lançamentos.
@@ -39,6 +40,7 @@ components/
   LeadForm.tsx              Formulário de cadastro e edição
   BuscarLojas.tsx           Tela de busca de lojas
   Financeiro.tsx            Tela financeira
+  FilaEnvio.tsx             Modo envio (fila de leads)
   ConfirmDialog.tsx         Janela de confirmação de exclusão
   PageHeader.tsx            Cabeçalho das páginas
 lib/

@@ -1,6 +1,8 @@
 'use client'
 import PageHeader from './PageHeader'
 import ConfirmDialog from './ConfirmDialog'
+import FilaEnvio from './FilaEnvio'
+import { temMensagem, whatsappNumber } from '@/lib/message-template'
 import { SEGMENTOS, SOLUCOES } from '@/lib/segmentos'
 import { useUsuario } from '@/lib/useUsuario'
 import { Flame, Plus, Send, Sparkles, Users } from 'lucide-react'
@@ -24,6 +26,7 @@ export default function Painel() {
   const [refLat, setRefLat] = useState(''), [refLng, setRefLng] = useState('')
   const usuario = useUsuario(), seuNome = usuario?.nome ?? ''
   const [form, setForm] = useState<{ lead: Lead | null } | null>(null)
+  const [fila, setFila] = useState<Lead[] | null>(null)
   const [apagar, setApagar] = useState<Lead | null>(null)
   const [aviso, setAviso] = useState('')
 
@@ -69,6 +72,16 @@ export default function Painel() {
       .sort((a, b) => (ref ? (a.dist ?? 1e9) - (b.dist ?? 1e9) : 0))
   }, [leads, busca, fStatus, fSeg, fSol, raio, ref])
 
+  function abrirFila() {
+    const q = lista.map(x => x.l).filter(l => temMensagem(l.status) && whatsappNumber(l.whatsapp))
+    if (!q.length) return toast('Nenhum lead com telefone válido e mensagem nos filtros atuais')
+    setFila(q)
+  }
+  async function marcarEnviado(l: Lead) {
+    if (l.status !== 'novo') return
+    const { error } = await supabase().from('leads').update({ status: 'contato_realizado' }).eq('id', l.id)
+    if (error) toast('Erro ao atualizar status: ' + error.message); else carregar()
+  }
   const cont = (s: Status) => leads.filter(l => l.status === s).length
   const kpis = [['Total de leads', leads.length], ['Novos', cont('novo')],
     ['Contatados', cont('contato_realizado')], ['Interessados', cont('interessado')]]
@@ -76,6 +89,7 @@ export default function Painel() {
   return (
     <div className="space-y-6">
         <PageHeader titulo="Leads" sub="Seus contatos e abordagens em um só lugar." icone={<Users size={24} />}>
+          <button className="btn-w" onClick={abrirFila}><Send size={16} />Modo envio</button>
           <button className="btn-w" onClick={() => setForm({ lead: null })}><Plus size={16} />Novo lead</button>
         </PageHeader>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -113,7 +127,8 @@ export default function Painel() {
             {lista.map(({ l, dist }) => <LeadCard key={l.id + l.status} lead={l} dist={dist} temRef={!!ref} seuNome={seuNome}
               onEdit={() => setForm({ lead: l })} onDelete={() => setApagar(l)} toast={toast} />)}
           </div>)}
-            {apagar && <ConfirmDialog titulo="Excluir lead?" texto={`"${apagar.nome_loja}" será removido e essa ação não pode ser desfeita.`}
+            {fila && <FilaEnvio leads={fila} seuNome={seuNome} onSent={marcarEnviado} onClose={() => setFila(null)} />}
+      {apagar && <ConfirmDialog titulo="Excluir lead?" texto={`"${apagar.nome_loja}" será removido e essa ação não pode ser desfeita.`}
         onCancel={() => setApagar(null)} onConfirm={async () => { await excluir(apagar); setApagar(null) }} />}
       {form && <LeadForm lead={form.lead} onSave={salvar} onCancel={() => setForm(null)} />}
       {aviso && <div className="fixed bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-md bg-slate-900 px-4 py-2 text-sm text-white">{aviso}</div>}
