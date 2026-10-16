@@ -4,13 +4,13 @@ import type { Status } from './types'
 // Status que NÃO estão nesta lista (sem_interesse e convertido) não têm mensagem: ficam só com a tag.
 export const MESSAGES: Partial<Record<Status, string>> = {
   novo:
-    'Olá, tudo bem? Me chamo {SEU_NOME} e estou entrando em contato com a {NOME_DA_LOJA}. Gostaria de conversar com o responsável para apresentar uma solução que pode fazer sentido para o negócio de vocês. Quem seria a melhor pessoa para conversar sobre isso?',
+    'Olá, tudo bem? Aqui é o {SEU_NOME}, eu crio sites e páginas para negócios da região. Vi a {NOME_DA_LOJA} e queria fazer uma pergunta rápida: vocês já têm um site ou página própria para os clientes encontrarem e entrarem em contato? Se ainda não tiver, posso te mostrar um exemplo bem simples de como ficaria, sem compromisso.',
   contato_realizado:
-    'Olá, tudo bem? Aqui é {SEU_NOME}. Te mandei uma mensagem há alguns dias sobre uma solução para a {NOME_DA_LOJA} e queria saber se você conseguiu ver. Posso te explicar rapidinho, sem compromisso, para você avaliar se faz sentido?',
+    'Oi, tudo bem? {SEU_NOME} aqui de novo. Sei que a rotina da {NOME_DA_LOJA} é corrida, então vou ser breve: posso te mandar um exemplo de como ficaria uma página para vocês? É só responder "pode" que eu envio. Se não fizer sentido agora, sem problema, é só me avisar.',
   interessado:
-    'Olá, tudo bem? Aqui é {SEU_NOME}. Que bom saber que a {NOME_DA_LOJA} se interessou! Posso te mostrar como funcionaria na prática e já te passar valores e prazos? Se preferir, podemos marcar uma conversa rápida de 10 minutos, no melhor horário para você.',
+    'Que bom, obrigado pelo retorno! Para eu montar algo certinho para a {NOME_DA_LOJA}, me conta rapidinho: hoje os clientes chegam até vocês principalmente por onde (Instagram, WhatsApp, indicação)? Com isso eu te envio uma proposta com valores e prazo. Se preferir, podemos conversar 10 minutinhos hoje ou amanhã.',
   negociacao:
-    'Olá, tudo bem? Aqui é {SEU_NOME}. Estou passando para saber se você conseguiu avaliar a nossa proposta para a {NOME_DA_LOJA}. Ficou alguma dúvida sobre valores, prazos ou funcionalidades? Posso ajustar o que for preciso para fecharmos da melhor forma. Qual o melhor momento para conversarmos?',
+    'Oi, tudo bem? {SEU_NOME} aqui. Passando para saber o que você achou da proposta para a {NOME_DA_LOJA}. Ficou alguma dúvida sobre valores, prazo ou o que está incluso? Se alguma coisa não encaixou, me fala que eu ajusto. Se fizer sentido para você, já combinamos o início.',
 }
 
 export const temMensagem = (status: Status) => !!MESSAGES[status]
