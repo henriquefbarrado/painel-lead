@@ -2,11 +2,11 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { FileSpreadsheet, LogOut, Menu, MapPinned, Moon, Search, Store, Sun, Users, Wallet, X } from 'lucide-react'
+import { LogOut, Menu, Moon, Search, Store, Sun, Users, Wallet, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useUsuario } from '@/lib/useUsuario'
 
-const NAVEGACAO = [['/', 'Leads', Users], ['/buscar', 'Buscar lojas', Search], ['/importar', 'Importar leads', FileSpreadsheet], ['/mapa', 'Mapa', MapPinned], ['/financeiro', 'Financeiro', Wallet]] as const
+const LINKS = [['/', 'Leads', Users], ['/buscar', 'Buscar lojas', Search], ['/financeiro', 'Financeiro', Wallet]] as const
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname(), router = useRouter()
@@ -31,9 +31,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </div>
       <aside className={`${open ? 'flex' : 'hidden'} flex-col bg-gradient-to-b from-slate-900 to-slate-950 p-4 text-slate-300 md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0`}>
         <div className="mb-8 hidden px-1 pt-2 md:block">{marca}</div>
-        <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Navegação</p>
+        <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Menu</p>
         <nav className="space-y-1">
-          {NAVEGACAO.map(([href, label, Icon]) => (
+          {LINKS.map(([href, label, Icon]) => (
             <Link key={href} href={href} onClick={() => setOpen(false)}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${path === href ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-900/40' : 'hover:bg-white/10 hover:text-white'}`}>
               <Icon size={18} />{label}</Link>))}

@@ -6,11 +6,12 @@ Painel interno para organizar a prospecção comercial de lojas: cadastro de lea
 
 - **Login seguro** por e-mail e senha (Supabase Auth). Páginas internas protegidas: sem login, redireciona para a tela de entrada.
 - **Leads**: cadastrar, editar, ver detalhes e excluir (com janela de confirmação), com busca por nome, cidade ou telefone e filtro por status.
+- **Segmento e soluções**: cada lead tem um segmento (restaurante, loja, serviços, beleza, saúde, outros) e as soluções que fazem sentido para ele (cardápio digital, landing page, agendamento online etc., várias por lead), com filtro por segmento e por solução. O catálogo fica em `lib/segmentos.ts`.
 - **Indicadores**: total de leads, novos, contatados e interessados.
 - **Raio de distância**: escolha uma loja como referência e filtre as lojas em 1, 3, 5, 10, 20 ou 50 km (cálculo de Haversine, em linha reta). Lojas sem coordenadas aparecem como "Localização precisa ser preenchida".
 - **Mensagem de WhatsApp por status**: o card mostra um texto pronto, editável, com botões **Copiar mensagem** e **WhatsApp** (abre `wa.me` com o texto preenchido). Nada é enviado automaticamente. Veja [STATUS-DOS-LEADS.md](STATUS-DOS-LEADS.md).
 - **Nome por login**: o nome usado nas mensagens vem do e-mail de quem está logado (`lib/usuarios.ts`).
-- **Buscar lojas sem site**: pesquisa negócios por segmento e cidade/bairro no Google Places e mostra só os que não têm site próprio (quem só tem Instagram, Facebook ou link de WhatsApp conta como sem site). Dá para adicionar o resultado direto aos leads.
+- **Buscar lojas sem site**: pesquisa negócios por segmento e cidade/bairro (OpenWeb Ninja, grátis, ou Google Places) e mostra só os que não têm site próprio (quem só tem Instagram, Facebook ou link de WhatsApp conta como sem site). Dá para adicionar o resultado direto aos leads.
 - **Financeiro**: receitas, despesas, lucro do mês, lucro total, gráfico dos últimos 6 meses e lista de lançamentos.
 - **Tema escuro (padrão) e claro**, com botão no menu. Layout responsivo para computador e celular.
 
@@ -19,7 +20,7 @@ Painel interno para organizar a prospecção comercial de lojas: cadastro de lea
 - [Next.js 14](https://nextjs.org) (App Router) e React 18, em TypeScript
 - [Tailwind CSS](https://tailwindcss.com) e [lucide-react](https://lucide.dev) (ícones)
 - [Supabase](https://supabase.com): banco Postgres, autenticação e regras de segurança (RLS)
-- Google Places API (New): busca de lojas (opcional)
+- OpenWeb Ninja ou Google Places API (New): busca de lojas (opcional)
 - Hospedagem: [Vercel](https://vercel.com)
 
 ## Estrutura do projeto
@@ -50,6 +51,7 @@ lib/
 middleware.ts               Bloqueia páginas para quem não está logado
 supabase/
   schema.sql                Tabela de leads
+  segmentos.sql             Colunas de segmento e soluções (rode depois do schema.sql)
   financeiro.sql            Tabela do financeiro
 ```
 
@@ -57,7 +59,7 @@ supabase/
 
 Pré-requisito: Node.js 18 ou superior.
 
-1. **Supabase**: crie um projeto em https://supabase.com. No **SQL Editor**, rode `supabase/schema.sql` e depois `supabase/financeiro.sql`.
+1. **Supabase**: crie um projeto em https://supabase.com. No **SQL Editor**, rode `supabase/schema.sql`, `supabase/financeiro.sql` e `supabase/segmentos.sql`.
 2. **Usuários**: em **Authentication > Users**, crie cada pessoa (marque *Auto Confirm User*). Desative o cadastro público em **Authentication > Providers > Email** (*Allow new users to sign up*).
 3. **Variáveis de ambiente**: copie o modelo e preencha.
    ```
@@ -67,7 +69,8 @@ Pré-requisito: Node.js 18 ou superior.
    |---|---|---|
    | `NEXT_PUBLIC_SUPABASE_URL` | Sim | Supabase: Project Settings > Data API (só o endereço base, `https://xxxx.supabase.co`) |
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Sim | Supabase: Project Settings > API Keys (chave *publishable*; `NEXT_PUBLIC_SUPABASE_ANON_KEY` também é aceita) |
-   | `GOOGLE_MAPS_API_KEY` | Só para a busca de lojas | Google Cloud: ative a *Places API (New)*, com faturamento, e crie uma chave de API |
+   | `OPENWEBNINJA_API_KEY` | Só para a busca de lojas | Cadastro grátis em https://app.openwebninja.com/signup (500 lojas por mês, sem cartão). Tem prioridade sobre o Google |
+   | `GOOGLE_MAPS_API_KEY` | Alternativa para a busca de lojas | Google Cloud: ative a *Places API (New)*, com faturamento, e crie uma chave de API |
 4. **Instalar e iniciar**:
    ```
    npm install

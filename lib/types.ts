@@ -7,7 +7,7 @@ export type Lead = {
   id: string; nome_loja: string; responsavel: string | null; whatsapp: string | null
   endereco: string | null; cidade: string | null; estado: string | null; cep: string | null
   latitude: number | null; longitude: number | null; categoria: string | null
-  status: Status; observacoes: string | null; created_at: string
+  segmento: string | null; solucoes: string[]; status: Status; observacoes: string | null; created_at: string
 }
 export type LeadInput = Omit<Lead, 'id' | 'created_at'>
 export const STATUS_COR: Record<Status, string> = {

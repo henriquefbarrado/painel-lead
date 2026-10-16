@@ -1,13 +1,14 @@
 'use client'
 import { useState } from 'react'
+import { SEGMENTOS, SOLUCOES } from '@/lib/segmentos'
 import { STATUS, type Lead, type LeadInput, type Status } from '@/lib/types'
 
 const vazio: LeadInput = { nome_loja: '', responsavel: '', whatsapp: '', endereco: '', cidade: '', estado: '',
-  cep: '', latitude: null, longitude: null, categoria: '', status: 'novo', observacoes: '' }
+  cep: '', latitude: null, longitude: null, categoria: '', segmento: null, solucoes: [], status: 'novo', observacoes: '' }
 
 export default function LeadForm({ lead, onSave, onCancel }: {
   lead: Lead | null; onSave: (d: LeadInput) => Promise<void>; onCancel: () => void }) {
-  const [f, setF] = useState<LeadInput>(lead ? { ...vazio, ...lead } : vazio)
+  const [f, setF] = useState<LeadInput>(lead ? { ...vazio, ...lead, solucoes: lead.solucoes ?? [] } : vazio)
   const [busy, setBusy] = useState(false)
   const set = (k: keyof LeadInput, v: string) => setF(p => ({ ...p, [k]: v }))
   const num = (v: string) => (v.trim() === '' ? null : Number(v.replace(',', '.')))
@@ -30,7 +31,20 @@ export default function LeadForm({ lead, onSave, onCancel }: {
             <input required className="inp mt-1" value={f.nome_loja} onChange={e => set('nome_loja', e.target.value)} /></label>
           {t('responsavel', 'Responsável')}
           {t('whatsapp', 'WhatsApp', '(31) 99999-9999')}
-          {t('categoria', 'Categoria / segmento')}
+          {t('categoria', 'Categoria (opcional)')}
+          <label className="block text-sm">Segmento
+            <select className="inp mt-1" value={f.segmento ?? ''} onChange={e => { const sg = e.target.value; setF(p => ({ ...p, segmento: sg || null, solucoes: sg ? p.solucoes.filter(s => SEGMENTOS[sg].solucoes.includes(s)) : [] })) }}>
+              <option value="">Selecione…</option>
+              {Object.entries(SEGMENTOS).map(([k, v]) => <option key={k} value={k}>{v.nome}</option>)}</select></label>
+          {f.segmento && SEGMENTOS[f.segmento] && (
+            <div className="sm:col-span-2">
+              <p className="mb-2 text-sm">Soluções que fazem sentido (pode marcar mais de uma)</p>
+              <div className="flex flex-wrap gap-2">
+                {SEGMENTOS[f.segmento].solucoes.map(s => { const on = f.solucoes.includes(s); return (
+                  <button type="button" key={s} onClick={() => setF(p => ({ ...p, solucoes: on ? p.solucoes.filter(x => x !== s) : [...p.solucoes, s] }))}
+                    className={`rounded-full border px-3 py-1.5 text-sm transition ${on ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-300 text-slate-600 hover:border-indigo-400'}`}>{on ? '✓ ' : ''}{SOLUCOES[s]}</button>) })}
+              </div>
+            </div>)}
           {t('endereco', 'Endereço')}
           {t('cep', 'CEP')}
           {t('cidade', 'Cidade')}
