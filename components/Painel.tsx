@@ -1,6 +1,7 @@
 'use client'
 import PageHeader from './PageHeader'
 import ConfirmDialog from './ConfirmDialog'
+import { useUsuario } from '@/lib/useUsuario'
 import { Flame, Plus, Send, Sparkles, Users } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -19,13 +20,12 @@ export default function Painel() {
   const [raio, setRaio] = useState(0)
   const [refId, setRefId] = useState('')
   const [refLat, setRefLat] = useState(''), [refLng, setRefLng] = useState('')
-  const [seuNome, setSeuNome] = useState('')
+  const usuario = useUsuario(), seuNome = usuario?.nome ?? ''
   const [form, setForm] = useState<{ lead: Lead | null } | null>(null)
   const [apagar, setApagar] = useState<Lead | null>(null)
   const [aviso, setAviso] = useState('')
 
   const toast = (m: string) => { setAviso(m); setTimeout(() => setAviso(''), 3000) }
-  useEffect(() => { setSeuNome(localStorage.getItem('seuNome') || '') }, [])
   async function carregar() {
     const { data, error } = await supabase().from('leads').select('*').order('created_at', { ascending: false })
     if (error) toast('Erro ao carregar leads: ' + error.message)
@@ -98,7 +98,7 @@ export default function Painel() {
           </div>
           {raio > 0 && !ref && <p className="text-sm text-amber-600">Escolha uma loja de referência para filtrar por raio.</p>}
         </div>
-        {loading ? <p className="text-slate-500">Carregando…</p> : lista.length === 0 ? <div className="card p-10 text-center text-slate-500"><Users className="mx-auto mb-2 text-slate-300" size={36} />Nenhum lead encontrado.<br /><span className="text-sm">Cadastre um lead ou use a aba Buscar lojas.</span></div> : (
+        {loading || !usuario ? <p className="text-slate-500">Carregando…</p> : lista.length === 0 ? <div className="card p-10 text-center text-slate-500"><Users className="mx-auto mb-2 text-slate-300" size={36} />Nenhum lead encontrado.<br /><span className="text-sm">Cadastre um lead ou use a aba Buscar lojas.</span></div> : (
           <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
             {lista.map(({ l, dist }) => <LeadCard key={l.id + l.status} lead={l} dist={dist} temRef={!!ref} seuNome={seuNome}
               onEdit={() => setForm({ lead: l })} onDelete={() => setApagar(l)} toast={toast} />)}

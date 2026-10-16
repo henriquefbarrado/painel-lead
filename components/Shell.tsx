@@ -4,13 +4,15 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { LogOut, Menu, Moon, Search, Store, Sun, Users, Wallet, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
+import { useUsuario } from '@/lib/useUsuario'
 
 const LINKS = [['/', 'Leads', Users], ['/buscar', 'Buscar lojas', Search], ['/financeiro', 'Financeiro', Wallet]] as const
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname(), router = useRouter()
-  const [open, setOpen] = useState(false), [nome, setNome] = useState(''), [escuro, setEscuro] = useState(true)
-  useEffect(() => { setNome(localStorage.getItem('seuNome') || ''); setEscuro(document.documentElement.classList.contains('dark')) }, [])
+  const [open, setOpen] = useState(false), [escuro, setEscuro] = useState(true)
+  const u = useUsuario()
+  useEffect(() => { setEscuro(document.documentElement.classList.contains('dark')) }, [])
   function tema() { const d = document.documentElement.classList.toggle('dark'); setEscuro(d); localStorage.setItem('tema', d ? 'escuro' : 'claro') }
   async function sair() { await supabase().auth.signOut(); router.push('/login'); router.refresh() }
   const marca = (
@@ -38,9 +40,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="mt-auto space-y-3 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
           <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-indigo-400 to-fuchsia-400 text-sm font-bold text-white">{(nome[0] || '?').toUpperCase()}</div>
-            <input className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none" placeholder="Seu nome" title="Usado na mensagem do WhatsApp"
-              value={nome} onChange={e => { setNome(e.target.value); localStorage.setItem('seuNome', e.target.value) }} />
+            <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-indigo-400 to-fuchsia-400 text-sm font-bold text-white">{(u?.nome[0] || '?').toUpperCase()}</div>
+            <div className="min-w-0 leading-tight"><p className="truncate text-sm font-medium text-white">{u?.nome ?? '…'}</p><p className="truncate text-[11px] text-slate-400">{u?.email}</p></div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button className="flex items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-sm hover:bg-white/10" onClick={tema}>{escuro ? <Sun size={15} /> : <Moon size={15} />}{escuro ? 'Claro' : 'Escuro'}</button>
