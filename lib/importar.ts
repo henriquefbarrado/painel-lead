@@ -115,8 +115,9 @@ export function construirLeads(linhas: string[][], mapa: Mapeamento, existentes:
   for (const r of linhas) {
     const nome = txt(r, 'nome_loja')
     if (!nome) { semNome++; continue }
-    const uf = txt(r, 'estado')
+        const uf = txt(r, 'estado')
     const lead: LeadInput = {
+      segmento: null, solucoes: [],
       nome_loja: nome, responsavel: ou(txt(r, 'responsavel')), whatsapp: ou(txt(r, 'whatsapp')),
       endereco: ou(txt(r, 'endereco')), cidade: ou(txt(r, 'cidade')), estado: ou(uf.length === 2 ? uf.toUpperCase() : uf),
       cep: ou(txt(r, 'cep')), latitude: coord(txt(r, 'latitude'), 90), longitude: coord(txt(r, 'longitude'), 180),
