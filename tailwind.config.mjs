@@ -1,0 +1,1 @@
+export default { content: ["./app/**/*.{ts,tsx}","./components/**/*.{ts,tsx}"], theme: { extend: { boxShadow: { soft: "0 1px 2px rgba(15,23,42,.04), 0 10px 30px -10px rgba(15,23,42,.12)" } } }, plugins: [] };
