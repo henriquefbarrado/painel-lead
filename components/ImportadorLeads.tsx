@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, MapPinned, Upload, Users } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Upload, Users } from 'lucide-react'
 import PageHeader from './PageHeader'
 import { supabase } from '@/lib/supabase/client'
 import { STATUS } from '@/lib/types'
@@ -78,7 +78,13 @@ export default function ImportadorLeads() {
             <p className="text-sm text-slate-500">Eles já estão na lista de leads e, se tiverem coordenadas, aparecem no mapa.</p></div>
           <div className="flex flex-wrap justify-center gap-2">
             <Link href="/leads" className="btn-p"><Users size={16} />Ver leads</Link>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> 38f52d05e60443c4c49261d6bcda4c044f59afbe
             <Link href="/mapa" className="btn"><MapPinned size={16} />Ver no mapa</Link>
+>>>>>>> 341d71f23dc708d410410811857a19f7747ad1cb
             <button className="btn" onClick={reiniciar}>Importar outra planilha</button>
           </div>
         </div>
