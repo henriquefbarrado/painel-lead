@@ -2,11 +2,15 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { LogOut, Menu, Moon, Search, Store, Sun, Users, Wallet, X } from 'lucide-react'
+import { CalendarCheck, FileText, FileSpreadsheet, Kanban, LayoutDashboard, LogOut, Menu, Moon, Search, Store, Sun, Users, Wallet, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useUsuario } from '@/lib/useUsuario'
 
-const LINKS = [['/', 'Leads', Users], ['/buscar', 'Buscar lojas', Search], ['/financeiro', 'Financeiro', Wallet]] as const
+const LINKS = [['/', 'Início', LayoutDashboard], ['/hoje', 'Hoje', CalendarCheck], ['/leads', 'Leads', Users], ['/pipeline', 'Pipeline', Kanban],
+  ['/buscar', 'Buscar lojas', Search], ['/importar', 'Importar', FileSpreadsheet],
+  ['/templates', 'Mensagens', FileText], ['/financeiro', 'Financeiro', Wallet]] as const
+const ABAS = LINKS.filter(([h]) => ['/', '/hoje', '/leads', '/pipeline'].includes(h))
+const ativa = (path: string, href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'))
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname(), router = useRouter()
@@ -27,15 +31,15 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen md:flex">
       <div className="flex items-center justify-between bg-slate-900 px-4 py-3 md:hidden">
-        {marca}<button className="rounded-lg bg-white/10 p-2 text-white" onClick={() => setOpen(!open)}>{open ? <X size={18} /> : <Menu size={18} />}</button>
+        {marca}<button className="rounded-lg bg-white/10 p-2 text-white" aria-label="Menu" onClick={() => setOpen(!open)}>{open ? <X size={18} /> : <Menu size={18} />}</button>
       </div>
-      <aside className={`${open ? 'flex' : 'hidden'} flex-col bg-gradient-to-b from-slate-900 to-slate-950 p-4 text-slate-300 md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0`}>
+      <aside className={`${open ? 'flex' : 'hidden'} flex-col overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950 p-4 text-slate-300 md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0`}>
         <div className="mb-8 hidden px-1 pt-2 md:block">{marca}</div>
         <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Menu</p>
         <nav className="space-y-1">
           {LINKS.map(([href, label, Icon]) => (
             <Link key={href} href={href} onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${path === href ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-900/40' : 'hover:bg-white/10 hover:text-white'}`}>
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${ativa(path, href) ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-900/40' : 'hover:bg-white/10 hover:text-white'}`}>
               <Icon size={18} />{label}</Link>))}
         </nav>
         <div className="mt-auto space-y-3 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
@@ -49,7 +53,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 space-y-6 p-4 md:p-8">{children}</main>
+      <main className="min-w-0 flex-1 space-y-6 p-4 pb-24 md:p-8">{children}</main>
+      <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-white/10 bg-slate-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        {ABAS.map(([href, label, Icon]) => (
+          <Link key={href} href={href} onClick={() => setOpen(false)} className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${ativa(path, href) ? 'text-indigo-300' : 'text-slate-400'}`}><Icon size={20} />{label}</Link>))}
+        <button onClick={() => setOpen(!open)} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-slate-400"><Menu size={20} />Mais</button>
+      </nav>
     </div>
   )
 }

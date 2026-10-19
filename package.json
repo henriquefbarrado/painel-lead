@@ -6,7 +6,9 @@
   "dev": "next dev",
   "build": "next build",
   "start": "next start",
-  "prod": "next build && next start"
+  "prod": "next build && next start",
+  "test": "tsc -p tsconfig.test.json && node --test .test-build/tests/lib.test.js",
+  "typecheck": "tsc --noEmit"
  },
  "dependencies": {
   "@supabase/ssr": "^0.5.2",

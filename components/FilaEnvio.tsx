@@ -2,15 +2,16 @@
 import { useEffect, useState } from 'react'
 import { MapPin, MessageCircle, Phone, SkipForward, X } from 'lucide-react'
 import { STATUS, STATUS_COR, type Lead } from '@/lib/types'
-import { buildMessage, whatsappLink, whatsappNumber } from '@/lib/message-template'
+import { whatsappLink, whatsappNumber } from '@/lib/message-template'
+import { mensagemDoLead, type Template } from '@/lib/templates'
 
 // Fila de envio: um lead por vez, com a mensagem pronta. O envio continua sendo manual no WhatsApp.
-export default function FilaEnvio({ leads, seuNome, onSent, onClose }: {
-  leads: Lead[]; seuNome: string; onSent: (l: Lead) => Promise<void> | void; onClose: () => void }) {
+export default function FilaEnvio({ leads, seuNome, templates = [], onSent, onClose }: {
+  leads: Lead[]; seuNome: string; templates?: Template[]; onSent: (l: Lead) => Promise<void> | void; onClose: () => void }) {
   const [i, setI] = useState(0), [enviados, setEnviados] = useState(0), [aberto, setAberto] = useState(false), [busy, setBusy] = useState(false)
   const l = leads[i]
-  const [msg, setMsg] = useState(l ? buildMessage(l.nome_loja, seuNome, l.status) : '')
-  useEffect(() => { if (l) { setMsg(buildMessage(l.nome_loja, seuNome, l.status)); setAberto(false) } }, [i]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [msg, setMsg] = useState(l ? mensagemDoLead(l, seuNome, templates) : '')
+  useEffect(() => { if (l) { setMsg(mensagemDoLead(l, seuNome, templates)); setAberto(false) } }, [i]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
