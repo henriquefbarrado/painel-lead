@@ -51,6 +51,7 @@ export default function HistoricoContato({ lead, onClose }: { lead: Pick<Lead, '
     })
     setSalvando(false)
     if (error) return toast('Erro ao registrar: ' + error.message)
+    await supabase().from('leads').update({ ultimo_contato: new Date(quando).toISOString() }).eq('id', lead.id)
     setNota(''); setQuando(agoraLocal()); toast('Contato registrado'); carregar()
   }
   async function excluir(c: Contato) {

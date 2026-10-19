@@ -8,6 +8,9 @@ export type Lead = {
   endereco: string | null; cidade: string | null; estado: string | null; cep: string | null
   latitude: number | null; longitude: number | null; categoria: string | null
   segmento: string | null; solucoes: string[]; status: Status; observacoes: string | null; created_at: string
+  // Colunas de supabase/melhorias.sql (opcionais para não quebrar quem ainda não rodou a migração)
+  proximo_contato?: string | null; ultimo_contato?: string | null; proxima_acao?: string | null
+  motivo_perda?: string | null; place_id?: string | null
 }
 export type LeadInput = Omit<Lead, 'id' | 'created_at'>
 export const STATUS_COR: Record<Status, string> = {
@@ -15,3 +18,7 @@ export const STATUS_COR: Record<Status, string> = {
   interessado: 'bg-amber-100 text-amber-700', sem_interesse: 'bg-slate-200 text-slate-600',
   negociacao: 'bg-orange-100 text-orange-700', convertido: 'bg-emerald-100 text-emerald-700',
 }
+
+// Ordem do funil (a mesma do Kanban). 'sem_interesse' é a saída de qualquer etapa.
+export const FUNIL: Status[] = ['novo', 'contato_realizado', 'interessado', 'negociacao', 'convertido', 'sem_interesse']
+export const MOTIVOS_PERDA = ['Já tem site', 'Sem orçamento', 'Não respondeu', 'Não tem interesse em site', 'Escolheu outro fornecedor', 'Fechou o negócio', 'Outro']
