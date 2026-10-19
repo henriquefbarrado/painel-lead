@@ -51,3 +51,10 @@ Abra `lib/message-template.ts` e edite o objeto `MESSAGES`. Os marcadores são:
 Para **dar mensagem** a um status que hoje não tem (por exemplo, "Convertido"), adicione uma linha nova em `MESSAGES` com o nome do status (`convertido: '...'`). Para **tirar** a mensagem de um status, apague a linha dele.
 
 Os nomes internos dos status são: `novo`, `contato_realizado`, `interessado`, `negociacao`, `sem_interesse` e `convertido`.
+
+## Novidades relacionadas ao funil
+
+- **Motivo da perda:** ao mover um lead para **Sem interesse** (no card, na ficha, no Kanban ou em massa), o sistema pergunta o motivo. Os mais comuns aparecem no Início.
+- **Follow-up:** leads em andamento podem ter **próximo contato** e **próxima ação**. Quando viram **Convertido** ou **Sem interesse**, a data de retorno é limpa.
+- **Convertido automático:** lançar uma **receita vinculada a um lead** no Financeiro marca o lead como Convertido.
+- **Mensagens por segmento:** em **Mensagens** você cria textos por etapa e por segmento. Convertido e Sem interesse continuam sem mensagem, mesmo que exista template.

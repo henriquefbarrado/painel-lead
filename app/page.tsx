@@ -1,3 +1,3 @@
 import Shell from '@/components/Shell'
-import Painel from '@/components/Painel'
-export default function Home() { return <Shell><Painel /></Shell> }
+import Dashboard from '@/components/Dashboard'
+export default function Home() { return <Shell><Dashboard /></Shell> }

@@ -1,7 +1,7 @@
 import { STATUS, type LeadInput, type Status } from './types'
 
 export const norm = (s: unknown) =>
-  String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+  String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
 
 export type CampoChave = 'nome_loja' | 'responsavel' | 'whatsapp' | 'endereco' | 'cidade' | 'estado' |
   'cep' | 'latitude' | 'longitude' | 'categoria' | 'status' | 'observacoes'

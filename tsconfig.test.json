@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "target": "es2020", "module": "node16", "moduleResolution": "node16", "outDir": ".test-build", "rootDir": ".",
+    "strict": true, "esModuleInterop": true, "skipLibCheck": true, "lib": ["dom", "esnext"], "types": ["node"]
+  },
+  "include": ["tests/*.test.ts"]
+}
