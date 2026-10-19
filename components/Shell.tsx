@@ -2,12 +2,20 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+<<<<<<< HEAD
 import { CalendarCheck, FileText, FileSpreadsheet, Kanban, LayoutDashboard, LogOut, Menu, Moon, Search, Store, Sun, Users, Wallet, X } from 'lucide-react'
+=======
+import { CalendarCheck, FileText, FileSpreadsheet, Kanban, LayoutDashboard, LogOut, Menu, MapPinned, Moon, Search, Store, Sun, Users, Wallet, X } from 'lucide-react'
+>>>>>>> 341d71f23dc708d410410811857a19f7747ad1cb
 import { supabase } from '@/lib/supabase/client'
 import { useUsuario } from '@/lib/useUsuario'
 
 const LINKS = [['/', 'Início', LayoutDashboard], ['/hoje', 'Hoje', CalendarCheck], ['/leads', 'Leads', Users], ['/pipeline', 'Pipeline', Kanban],
+<<<<<<< HEAD
   ['/buscar', 'Buscar lojas', Search], ['/importar', 'Importar', FileSpreadsheet],
+=======
+  ['/buscar', 'Buscar lojas', Search], ['/mapa', 'Mapa', MapPinned], ['/importar', 'Importar', FileSpreadsheet],
+>>>>>>> 341d71f23dc708d410410811857a19f7747ad1cb
   ['/templates', 'Mensagens', FileText], ['/financeiro', 'Financeiro', Wallet]] as const
 const ABAS = LINKS.filter(([h]) => ['/', '/hoje', '/leads', '/pipeline'].includes(h))
 const ativa = (path: string, href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'))

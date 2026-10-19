@@ -78,6 +78,10 @@ export default function ImportadorLeads() {
             <p className="text-sm text-slate-500">Eles já estão na lista de leads e, se tiverem coordenadas, aparecem no mapa.</p></div>
           <div className="flex flex-wrap justify-center gap-2">
             <Link href="/leads" className="btn-p"><Users size={16} />Ver leads</Link>
+<<<<<<< HEAD
+=======
+            <Link href="/mapa" className="btn"><MapPinned size={16} />Ver no mapa</Link>
+>>>>>>> 341d71f23dc708d410410811857a19f7747ad1cb
             <button className="btn" onClick={reiniciar}>Importar outra planilha</button>
           </div>
         </div>

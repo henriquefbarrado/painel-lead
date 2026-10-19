@@ -69,7 +69,10 @@ lib/
 middleware.ts               Bloqueia páginas para quem não está logado
 supabase/
   melhorias.sql             Follow-up, templates, meta, cota/cache da busca, financeiro x lead
+<<<<<<< HEAD
   por-usuario.sql           Separa os leads por usuário (dono do lead + regras de acesso)
+=======
+>>>>>>> 341d71f23dc708d410410811857a19f7747ad1cb
   schema.sql                Tabela de leads
   segmentos.sql             Colunas de segmento e soluções (rode depois do schema.sql)
   financeiro.sql            Tabela do financeiro
@@ -79,7 +82,11 @@ supabase/
 
 Pré-requisito: Node.js 18 ou superior.
 
+<<<<<<< HEAD
 1. **Supabase**: crie um projeto em https://supabase.com. No **SQL Editor**, rode, nesta ordem, `supabase/schema.sql`, `supabase/financeiro.sql`, `supabase/segmentos.sql`, `supabase/contatos.sql` e **`supabase/melhorias.sql`** (follow-up, templates, meta, cota da busca, vínculo financeiro-lead). Dá para rodar o `melhorias.sql` de novo sem problema. Por último, rode **`supabase/por-usuario.sql`** para cada usuário ver só os próprios leads.
+=======
+1. **Supabase**: crie um projeto em https://supabase.com. No **SQL Editor**, rode, nesta ordem, `supabase/schema.sql`, `supabase/financeiro.sql`, `supabase/segmentos.sql`, `supabase/contatos.sql` e **`supabase/melhorias.sql`** (follow-up, templates, meta, cota da busca, vínculo financeiro-lead). Dá para rodar o `melhorias.sql` de novo sem problema.
+>>>>>>> 341d71f23dc708d410410811857a19f7747ad1cb
 2. **Usuários**: em **Authentication > Users**, crie cada pessoa (marque *Auto Confirm User*). Desative o cadastro público em **Authentication > Providers > Email** (*Allow new users to sign up*).
 3. **Variáveis de ambiente**: copie o modelo e preencha.
    ```
@@ -122,7 +129,11 @@ Pelo terminal: `npm i -g vercel`, `vercel login`, `vercel link` (uma vez) e `ver
 - Nenhuma senha ou chave fica no código. O `.env.local` nunca vai para o Git.
 - O `.env.example` deve conter **apenas os nomes das variáveis, sem valores**.
 - Use somente a chave *publishable* (ou *anon*) do Supabase no projeto. Nunca use a chave *secret* ou *service_role*.
+<<<<<<< HEAD
 - As tabelas têm RLS ativado. **Leads são por usuário** (`supabase/por-usuario.sql`): cada pessoa vê, edita e exclui só os leads que criou, e o histórico de contato acompanha o lead. **Financeiro, templates, meta e a cota da busca** continuam compartilhados entre os usuários logados.
+=======
+- As tabelas têm RLS ativado, e só usuários autenticados leem ou escrevem. Todos os usuários logados veem todos os dados (de propósito: o painel é para uma equipe pequena que compartilha a carteira de leads). Se um dia precisar de dados separados por usuário, adicione `user_id` às tabelas e troque as políticas por `using (user_id = auth.uid())`.
+>>>>>>> 341d71f23dc708d410410811857a19f7747ad1cb
 - A rota `/api/buscar-lojas` confere o login no servidor, aplica cota mensal, cache e limite de frequência. A chave da busca nunca vai para o navegador.
 - A chave do Google fica só no servidor (rota `/api/buscar-lojas`) e deve ser restrita à Places API (New). Configure um alerta de orçamento e um limite diário de requisições no Google Cloud.
 
