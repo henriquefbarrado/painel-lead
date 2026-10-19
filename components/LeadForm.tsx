@@ -1,10 +1,11 @@
 'use client'
 import { useState } from 'react'
 import { SEGMENTOS, SOLUCOES } from '@/lib/segmentos'
-import { STATUS, type Lead, type LeadInput, type Status } from '@/lib/types'
+import { MOTIVOS_PERDA, STATUS, type Lead, type LeadInput, type Status } from '@/lib/types'
 
 const vazio: LeadInput = { nome_loja: '', responsavel: '', whatsapp: '', endereco: '', cidade: '', estado: '',
-  cep: '', latitude: null, longitude: null, categoria: '', segmento: null, solucoes: [], status: 'novo', observacoes: '' }
+  cep: '', latitude: null, longitude: null, categoria: '', segmento: null, solucoes: [], status: 'novo', observacoes: '',
+  proximo_contato: null, proxima_acao: '', motivo_perda: null }
 
 export default function LeadForm({ lead, onSave, onCancel }: {
   lead: Lead | null; onSave: (d: LeadInput) => Promise<void>; onCancel: () => void }) {
@@ -19,12 +20,13 @@ export default function LeadForm({ lead, onSave, onCancel }: {
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true)
     const clean = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, v === '' ? null : v])) as unknown as LeadInput
+    if (clean.status !== 'sem_interesse') clean.motivo_perda = null
     clean.nome_loja = f.nome_loja
     await onSave(clean); setBusy(false)
   }
   return (
     <div className="fixed inset-0 z-20 flex items-start justify-center overflow-y-auto bg-slate-900/50 backdrop-blur-sm p-4">
-      <form onSubmit={submit} className="w-full max-w-2xl space-y-3 rounded-2xl bg-white p-5 shadow-2xl">
+      <form onSubmit={submit} className="my-4 w-full max-w-2xl space-y-3 rounded-2xl bg-white p-5 shadow-2xl">
         <h2 className="text-lg font-semibold">{lead ? 'Editar lead' : 'Novo lead'}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">Nome da loja *
@@ -56,6 +58,13 @@ export default function LeadForm({ lead, onSave, onCancel }: {
           <label className="block text-sm">Status
             <select className="inp mt-1" value={f.status} onChange={e => set('status', e.target.value as Status)}>
               {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+          <label className="block text-sm">Próximo contato em
+            <input type="date" className="inp mt-1" value={f.proximo_contato ?? ''} onChange={e => set('proximo_contato', e.target.value)} /></label>
+          {t('proxima_acao', 'Próxima ação', 'Ex.: mandar exemplo de página')}
+          {f.status === 'sem_interesse' && (
+            <label className="block text-sm sm:col-span-2">Motivo da perda
+              <select className="inp mt-1" value={f.motivo_perda ?? ''} onChange={e => set('motivo_perda', e.target.value)}>
+                <option value="">Selecione…</option>{MOTIVOS_PERDA.map(m => <option key={m}>{m}</option>)}</select></label>)}
         </div>
         <label className="block text-sm">Observações
           <textarea className="inp mt-1" rows={3} value={f.observacoes ?? ''} onChange={e => set('observacoes', e.target.value)} /></label>

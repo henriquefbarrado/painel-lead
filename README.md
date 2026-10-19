@@ -14,6 +14,17 @@ Painel interno para organizar a prospecção comercial de lojas: cadastro de lea
 - **Nome por login**: o nome usado nas mensagens vem do e-mail de quem está logado (`lib/usuarios.ts`).
 - **Buscar lojas sem site**: pesquisa negócios por segmento e cidade/bairro (OpenWeb Ninja, grátis, ou Google Places) e mostra só os que não têm site próprio (quem só tem Instagram, Facebook ou link de WhatsApp conta como sem site). Dá para adicionar o resultado direto aos leads.
 - **Financeiro**: receitas, despesas, lucro do mês, lucro total, gráfico dos últimos 6 meses e lista de lançamentos.
+- **Início (dashboard)**: funil de conversão, taxa de conversão, leads por segmento, contatos dos últimos 7 dias, motivos de perda e **meta mensal** de sites fechados com barra de progresso. Botão de **backup** (JSON com leads, contatos, financeiro, templates e configurações).
+- **Hoje**: quem você precisa chamar (retornos atrasados e de hoje), com botão de WhatsApp e reagendamento em um clique.
+- **Pipeline (Kanban)**: arraste os leads entre Novo, Contato realizado, Interessado, Negociação, Convertido e Sem interesse. No celular use o seletor “Mover para…”.
+- **Ficha do lead** (`/leads/[id]`): dados, status, follow-up (próximo contato e próxima ação), mensagem pronta, histórico de contatos/notas e receitas vinculadas.
+- **Follow-up**: campo “próximo contato em”, aviso de retorno atrasado nos cards e filtro por retorno.
+- **Motivo de perda**: ao marcar “Sem interesse” o sistema pergunta o motivo (aparece no dashboard).
+- **Mensagens editáveis**: templates por etapa e por segmento, com variáveis `{nome_loja}`, `{seu_nome}`, `{responsavel}` e `{cidade}`. Sem template, vale o texto padrão de `lib/message-template.ts`.
+- **Ações em massa** na lista de leads: selecionar vários, mudar status, exportar e excluir. Ordenação (recentes, nome, etapa, retorno, distância), paginação (“Carregar mais”) e **exportação CSV**.
+- **Sem duplicados**: cadastro manual, importação e busca comparam telefone, nome+endereço e o `place_id` da busca.
+- **Busca de lojas**: contador de cota do mês (500 do plano grátis), cache de 24 h (repetir a busca não gasta cota), limite de 5 buscas por minuto, estados de carregando/erro/sem resultado e prévia com seleção antes de salvar.
+- **Financeiro**: receita vinculada ao lead (marca o lead como Convertido), categorias, a receber/recebido, despesas recorrentes, editar e excluir, ticket médio, conversão, custo por lead e receita por segmento.
 - **Tema escuro (padrão) e claro**, com botão no menu. Layout responsivo para computador e celular.
 
 ## Tecnologias
@@ -28,7 +39,12 @@ Painel interno para organizar a prospecção comercial de lojas: cadastro de lea
 
 ```
 app/
-  page.tsx                  Leads (página inicial, protegida)
+  page.tsx                  Início (dashboard)
+  leads/page.tsx            Lista de leads
+  leads/[id]/page.tsx       Ficha do lead
+  hoje/page.tsx             Retornos de hoje
+  pipeline/page.tsx         Kanban
+  templates/page.tsx        Mensagens editáveis
   buscar/page.tsx           Buscar lojas sem site
   financeiro/page.tsx       Financeiro
   login/page.tsx            Tela de login
@@ -52,6 +68,7 @@ lib/
   supabase/client.ts        Conexão com o Supabase no navegador
 middleware.ts               Bloqueia páginas para quem não está logado
 supabase/
+  melhorias.sql             Follow-up, templates, meta, cota/cache da busca, financeiro x lead
   schema.sql                Tabela de leads
   segmentos.sql             Colunas de segmento e soluções (rode depois do schema.sql)
   financeiro.sql            Tabela do financeiro
@@ -61,7 +78,7 @@ supabase/
 
 Pré-requisito: Node.js 18 ou superior.
 
-1. **Supabase**: crie um projeto em https://supabase.com. No **SQL Editor**, rode `supabase/schema.sql`, `supabase/financeiro.sql` e `supabase/segmentos.sql`.
+1. **Supabase**: crie um projeto em https://supabase.com. No **SQL Editor**, rode, nesta ordem, `supabase/schema.sql`, `supabase/financeiro.sql`, `supabase/segmentos.sql`, `supabase/contatos.sql` e **`supabase/melhorias.sql`** (follow-up, templates, meta, cota da busca, vínculo financeiro-lead). Dá para rodar o `melhorias.sql` de novo sem problema.
 2. **Usuários**: em **Authentication > Users**, crie cada pessoa (marque *Auto Confirm User*). Desative o cadastro público em **Authentication > Providers > Email** (*Allow new users to sign up*).
 3. **Variáveis de ambiente**: copie o modelo e preencha.
    ```
@@ -88,6 +105,8 @@ Pré-requisito: Node.js 18 ou superior.
 | `npm run build` | Gera a versão de produção |
 | `npm start` | Serve a versão de produção (rode o `build` antes) |
 | `npm run prod` | `build` e `start` em sequência (mais rápido para uso diário) |
+| `npm test` | Testes automáticos das regras (conversão, financeiro, templates, duplicados, CSV, cache) |
+| `npm run typecheck` | Confere os tipos do TypeScript |
 
 ## Publicar na Vercel
 
@@ -102,7 +121,8 @@ Pelo terminal: `npm i -g vercel`, `vercel login`, `vercel link` (uma vez) e `ver
 - Nenhuma senha ou chave fica no código. O `.env.local` nunca vai para o Git.
 - O `.env.example` deve conter **apenas os nomes das variáveis, sem valores**.
 - Use somente a chave *publishable* (ou *anon*) do Supabase no projeto. Nunca use a chave *secret* ou *service_role*.
-- As tabelas têm RLS ativado, e só usuários autenticados leem ou escrevem. Todos os usuários logados veem todos os dados.
+- As tabelas têm RLS ativado, e só usuários autenticados leem ou escrevem. Todos os usuários logados veem todos os dados (de propósito: o painel é para uma equipe pequena que compartilha a carteira de leads). Se um dia precisar de dados separados por usuário, adicione `user_id` às tabelas e troque as políticas por `using (user_id = auth.uid())`.
+- A rota `/api/buscar-lojas` confere o login no servidor, aplica cota mensal, cache e limite de frequência. A chave da busca nunca vai para o navegador.
 - A chave do Google fica só no servidor (rota `/api/buscar-lojas`) e deve ser restrita à Places API (New). Configure um alerta de orçamento e um limite diário de requisições no Google Cloud.
 
 ## Como personalizar
@@ -113,4 +133,4 @@ Pelo terminal: `npm i -g vercel`, `vercel login`, `vercel link` (uma vez) e `ver
 
 ## Ideias para o futuro
 
-Importação de leads por planilha (CSV ou Excel), geocodificação automática pelo endereço, mapa interativo, histórico de contatos por lead e permissões diferentes por usuário.
+Geocodificação automática pelo endereço, lembretes por e-mail/push dos retornos do dia e permissões diferentes por usuário.
