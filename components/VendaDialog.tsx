@@ -1,16 +1,4 @@
 'use client'
-<<<<<<< HEAD
-import { useCallback, useRef, useState } from 'react'
-import { PartyPopper } from 'lucide-react'
-import { useToast } from './Toast'
-import { CATEGORIAS_RECEITA } from '@/lib/metricas'
-import { categoriaDaVenda, registrarVenda, semReceita } from '@/lib/vendas'
-import type { Lead } from '@/lib/types'
-
-// Ao marcar um lead como Convertido: pergunta o valor e lança a receita no Financeiro, ligada ao lead.
-export function useVenda() {
-  const [fila, setFila] = useState<Lead[]>([]), depois = useRef<(() => void) | undefined>()
-=======
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PartyPopper } from 'lucide-react'
 import { useToast } from './Toast'
@@ -27,18 +15,10 @@ const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', curren
 // a receita é lançada sozinha como "A receber". Sem preço, abre a janela pedindo o valor.
 export function useVenda() {
   const [fila, setFila] = useState<Lead[]>([]), [auto, setAuto] = useState<Auto[]>([]), depois = useRef<(() => void) | undefined>()
->>>>>>> 4aa413e (tema corrigido)
   const pedirVenda = useCallback(async (leads: Lead[], aoTerminar?: () => void) => {
     const livres = new Set(await semReceita(leads.map(l => l.id)))
     const q = leads.filter(l => livres.has(l.id))
     if (!q.length) return
-<<<<<<< HEAD
-    depois.current = aoTerminar; setFila(q)
-  }, [])
-  const vendaDialog = fila.length ? (
-    <VendaDialog key={fila[0].id} lead={fila[0]} resto={fila.length - 1}
-      onFechar={() => { if (fila.length === 1) { depois.current?.(); depois.current = undefined } setFila(f => f.slice(1)) }} />
-=======
     const precos = await carregarPrecos(), feitas: Auto[] = [], manuais: Lead[] = []
     for (const l of q) {
       const v = totalDaVenda(l, precos)
@@ -55,13 +35,10 @@ export function useVenda() {
       {fila.length > 0 && <VendaDialog key={fila[0].id} lead={fila[0]} resto={fila.length - 1}
         onFechar={() => { if (fila.length === 1) { depois.current?.(); depois.current = undefined } setFila(f => f.slice(1)) }} />}
     </>
->>>>>>> 4aa413e (tema corrigido)
   ) : null
   return { pedirVenda, vendaDialog }
 }
 
-<<<<<<< HEAD
-=======
 // Aviso das receitas lançadas sozinhas, com Desfazer / Editar valor / Marcar recebido.
 function VendaAuto({ itens, onFechar }: { itens: Auto[]; onFechar: () => void }) {
   const { toast, aviso } = useToast()
@@ -107,7 +84,6 @@ function VendaAuto({ itens, onFechar }: { itens: Auto[]; onFechar: () => void })
   )
 }
 
->>>>>>> 4aa413e (tema corrigido)
 function VendaDialog({ lead, resto, onFechar }: { lead: Lead; resto: number; onFechar: () => void }) {
   const { toast, aviso } = useToast()
   const [valor, setValor] = useState(''), [situacao, setSituacao] = useState<'pago' | 'pendente'>('pago')

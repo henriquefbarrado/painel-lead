@@ -1,9 +1,5 @@
 import { supabase } from './supabase/client'
 import { dataHoje, CATEGORIAS_RECEITA } from './metricas'
-<<<<<<< HEAD
-import type { Lead } from './types'
-
-=======
 import { CHAVE_PRECOS, lerPrecos, type Precos } from './precos'
 import type { Lead } from './types'
 
@@ -16,7 +12,6 @@ export async function salvarPrecos(p: Precos) {
   return error?.message ?? null
 }
 
->>>>>>> 4aa413e (tema corrigido)
 // Quais destes leads ainda NÃO têm receita lançada (evita lançar a mesma venda duas vezes).
 export async function semReceita(ids: string[]) {
   const { data } = await supabase().from('financeiro').select('lead_id').eq('tipo', 'receita').in('lead_id', ids)
@@ -33,13 +28,6 @@ export function categoriaDaVenda(l: Pick<Lead, 'solucoes'>) {
   return CATEGORIAS_RECEITA[0]
 }
 
-<<<<<<< HEAD
-export async function registrarVenda(l: Pick<Lead, 'id' | 'nome_loja'>, valor: number, situacao: 'pago' | 'pendente', categoria: string) {
-  const { error } = await supabase().from('financeiro').insert({
-    tipo: 'receita', descricao: `Venda — ${l.nome_loja}`, valor, data: dataHoje(), categoria: categoria || null,
-    situacao, recorrente: false, lead_id: l.id })
-  return error?.message ?? null
-=======
 export async function lancarVenda(l: Pick<Lead, 'id' | 'nome_loja'>, valor: number, situacao: 'pago' | 'pendente', categoria: string) {
   const { data, error } = await supabase().from('financeiro').insert({
     tipo: 'receita', descricao: `Venda — ${l.nome_loja}`, valor, data: dataHoje(), categoria: categoria || null,
@@ -48,5 +36,4 @@ export async function lancarVenda(l: Pick<Lead, 'id' | 'nome_loja'>, valor: numb
 }
 export async function registrarVenda(l: Pick<Lead, 'id' | 'nome_loja'>, valor: number, situacao: 'pago' | 'pendente', categoria: string) {
   return (await lancarVenda(l, valor, situacao, categoria)).erro
->>>>>>> 4aa413e (tema corrigido)
 }
