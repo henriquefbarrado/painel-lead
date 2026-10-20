@@ -106,7 +106,7 @@ export default function Financeiro() {
       </PageHeader>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         {kpis.map(([n, v, cor], i) => { const I = icones[i], dest = i === 2; return (
-          <div key={n} className={`card card-hover p-4 ${dest ? '!border-0 bg-gradient-to-br from-indigo-600 to-violet-600 text-white' : ''}`}>
+          <div key={n} className={`card card-hover p-4 ${dest ? '!border-0 bg-indigo-600 text-white' : ''}`}>
             <div className={`mb-3 grid h-10 w-10 place-items-center rounded-xl ${estilo[cor]}`}><I size={20} /></div>
             <p className={`text-sm ${dest ? 'text-indigo-100' : 'text-slate-500'}`}>{n}</p>
             <p className={`text-xl font-bold sm:text-2xl ${!dest && n.startsWith('Lucro') && v < 0 ? 'text-rose-600' : ''}`}>{brl(v)}</p>
@@ -145,7 +145,7 @@ export default function Financeiro() {
               {meses.map(m => (
                 <div key={m.key} className="flex h-full flex-1 flex-col items-center justify-end gap-1" title={brl(m.v)}>
                   <span className="text-[11px] text-slate-500">{brl(m.v).replace(/\s/g, ' ')}</span>
-                  <div className={`w-full rounded-t-xl transition hover:opacity-80 ${m.v >= 0 ? 'bg-gradient-to-t from-indigo-600 to-violet-400' : 'bg-gradient-to-t from-rose-500 to-rose-300'}`} style={{ height: `${Math.max(4, (Math.abs(m.v) / max) * 100)}%`, maxHeight: '75%' }} />
+                  <div className={`w-full rounded-t-xl transition hover:opacity-80 ${m.v >= 0 ? 'bg-indigo-500' : 'bg-rose-500'}`} style={{ height: `${Math.max(4, (Math.abs(m.v) / max) * 100)}%`, maxHeight: '75%' }} />
                   <span className="text-xs capitalize text-slate-500">{m.nome}</span></div>))}
             </div>)}
         </div>
@@ -160,7 +160,7 @@ export default function Financeiro() {
         <div className="card space-y-2 p-4"><h2 className="font-semibold">Receita por segmento</h2>
           {porSeg.length === 0 ? <p className="text-sm text-slate-500">Vincule as receitas a leads com segmento para ver a divisão.</p> : porSeg.map(([k, v]) => (
             <div key={k} className="space-y-1"><div className="flex justify-between text-sm"><span>{SEGMENTOS[k]?.nome ?? 'Sem segmento'}</span><b>{brl(v)}</b></div>
-              <div className="h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-gradient-to-r from-indigo-600 to-violet-500" style={{ width: `${(v / porSeg[0][1]) * 100}%` }} /></div></div>))}
+              <div className="h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-indigo-500" style={{ width: `${(v / porSeg[0][1]) * 100}%` }} /></div></div>))}
         </div>
       </div>
 

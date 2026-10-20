@@ -75,7 +75,7 @@ export default function ImportadorLeads() {
         <div className="card space-y-4 p-8 text-center">
           <CheckCircle2 className="mx-auto text-emerald-500" size={44} />
           <div><h2 className="text-xl font-bold">{importados} leads importados</h2>
-            <p className="text-sm text-slate-500">Eles já estão na lista de leads e, se tiverem coordenadas, aparecem no mapa.</p></div>
+            <p className="text-sm text-slate-500">Eles já estão na lista de leads.</p></div>
           <div className="flex flex-wrap justify-center gap-2">
             <Link href="/leads" className="btn-p"><Users size={16} />Ver leads</Link>
             <button className="btn" onClick={reiniciar}>Importar outra planilha</button>
@@ -136,7 +136,7 @@ export default function ImportadorLeads() {
                 <div className="flex flex-wrap items-center gap-3">
                   <button className="btn-p" disabled={enviando || analise.validos.length === 0} onClick={importar}>
                     {enviando ? `Importando… ${progresso}/${analise.validos.length}` : `Importar ${analise.validos.length} leads`}</button>
-                  <p className="text-xs text-slate-500">Leads sem latitude e longitude entram na lista, mas só aparecem no mapa depois de receberem a localização.</p>
+                  <p className="text-xs text-slate-500">Leads sem latitude e longitude entram normalmente na lista.</p>
                 </div>
               </div>
             </>

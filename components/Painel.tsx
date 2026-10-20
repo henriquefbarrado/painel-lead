@@ -4,6 +4,8 @@ import ConfirmDialog from './ConfirmDialog'
 import FilaEnvio from './FilaEnvio'
 import MotivoPerdaDialog from './MotivoPerdaDialog'
 import LeadCard from './LeadCard'
+import LeadTabela from './LeadTabela'
+import EstadoVazio from './EstadoVazio'
 import LeadForm from './LeadForm'
 import { useToast } from './Toast'
 import { temMensagem, whatsappNumber } from '@/lib/message-template'
@@ -11,7 +13,8 @@ import { SEGMENTOS, SOLUCOES } from '@/lib/segmentos'
 import { useUsuario } from '@/lib/useUsuario'
 import { useTemplates } from '@/lib/useTemplates'
 import { mensagemDoLead } from '@/lib/templates'
-import { CheckSquare, Download, Plus, Send, Users } from 'lucide-react'
+import Link from 'next/link'
+import { CheckSquare, Download, FileSpreadsheet, LayoutGrid, List, Plus, Search, SearchX, Send, Users } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
@@ -21,7 +24,7 @@ import { baixar } from '@/lib/exportar'
 import { leadsParaCsv } from '@/lib/leads-csv'
 import { chavesDoLead } from '@/lib/importar'
 import { situacaoFollowUp, dataHoje } from '@/lib/metricas'
-import { FUNIL, STATUS, STATUS_COR, type Lead, type LeadInput, type Status } from '@/lib/types'
+import { FUNIL, STATUS, STATUS_PONTO, type Lead, type LeadInput, type Status } from '@/lib/types'
 import { RAIOS, distanceKm } from '@/lib/geo'
 
 const PAGINA = 24
@@ -44,6 +47,9 @@ export default function Painel() {
   const [selecionando, setSelecionando] = useState(false), [sel, setSel] = useState<Set<string>>(new Set())
   const [statusMassa, setStatusMassa] = useState<'' | Status>(''), [perdendo, setPerdendo] = useState<{ ids: string[]; nome: string } | null>(null)
   const { toast, aviso } = useToast()
+  const [vista, setVista] = useState<'cards' | 'tabela'>('cards')
+  useEffect(() => { try { if (localStorage.getItem('vista-leads') === 'tabela') setVista('tabela') } catch {} }, [])
+  function trocarVista(v: 'cards' | 'tabela') { setVista(v); try { localStorage.setItem('vista-leads', v) } catch {} }
 
   const carregar = useCallback(async () => {
     const r = await todosLeads()
@@ -129,7 +135,7 @@ export default function Painel() {
         <button className="btn-w" onClick={() => { setSelecionando(!selecionando); setSel(new Set()) }}><CheckSquare size={16} />{selecionando ? 'Cancelar seleção' : 'Selecionar'}</button>
         <button className="btn-w" onClick={() => exportar(lista.map(x => x.l))} disabled={!lista.length}><Download size={16} />CSV</button>
         <button className="btn-w" onClick={abrirFila}><Send size={16} />Modo envio</button>
-        <button className="btn-w" onClick={() => setForm({ lead: null })}><Plus size={16} />Novo lead</button>
+        <button className="btn-p" onClick={() => setForm({ lead: null })}><Plus size={16} />Novo lead</button>
       </PageHeader>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
@@ -138,9 +144,8 @@ export default function Painel() {
           return (
             <button key={nome} onClick={() => setFStatus(on && k ? '' : k)} aria-pressed={on}
               className={`card card-hover p-4 text-left ${on ? 'ring-2 ring-indigo-500' : ''}`}>
-              <p className="text-sm text-slate-500">{nome}</p>
-              <p className="text-3xl font-bold leading-tight">{v}</p>
-              {k && <span className={`lh-chip mt-1 ${STATUS_COR[k]}`}>{STATUS[k]}</span>}
+              <p className="flex items-center gap-2 text-sm text-slate-500">{k && <span className={`h-2 w-2 rounded-full ${STATUS_PONTO[k]}`} />}{nome}</p>
+              <p className="mt-1 text-2xl font-semibold leading-tight tracking-tight">{v}</p>
             </button>) })}
       </div>
 
@@ -192,15 +197,32 @@ export default function Painel() {
       {loading || !usuario || !templatesProntos ? (
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3" aria-busy="true">{[0, 1, 2].map(i => <div key={i} className="card space-y-3 p-5"><div className="skeleton h-11 w-full" /><div className="skeleton h-4 w-3/4" /><div className="skeleton h-24 w-full" /></div>)}</div>
       ) : lista.length === 0 ? (
-        <div className="card p-10 text-center text-slate-500"><Users className="mx-auto mb-2 text-slate-300" size={36} />Nenhum lead encontrado.<br /><span className="text-sm">Cadastre um lead, importe uma planilha ou use a aba Buscar lojas.</span></div>
+        leads.length === 0 ? (
+          <EstadoVazio icone={<Users size={22} />} titulo="Você ainda não tem leads" texto="Busque lojas sem site, importe uma planilha ou cadastre o primeiro lead manualmente.">
+            <Link href="/buscar" className="btn-p"><Search size={15} />Buscar lojas</Link>
+            <Link href="/importar" className="btn"><FileSpreadsheet size={15} />Importar planilha</Link>
+            <button className="btn" onClick={() => setForm({ lead: null })}><Plus size={15} />Novo lead</button>
+          </EstadoVazio>
+        ) : <EstadoVazio icone={<SearchX size={22} />} titulo="Nenhum lead com esses filtros" texto="Tente remover algum filtro ou mudar a busca." />
       ) : (
         <>
-          <p className="text-sm text-slate-500">Mostrando {Math.min(visiveis, lista.length)} de {lista.length}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500">Mostrando {Math.min(visiveis, lista.length)} de {lista.length}</p>
+            <div className="inline-flex rounded-lg border border-slate-300 p-0.5" role="group" aria-label="Modo de exibição">
+              {([['cards', 'Cards', LayoutGrid], ['tabela', 'Tabela', List]] as const).map(([k, nome, Icon]) => (
+                <button key={k} onClick={() => trocarVista(k)} aria-pressed={vista === k} title={nome}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${vista === k ? 'bg-indigo-500/10 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}><Icon size={14} />{nome}</button>))}
+            </div>
+          </div>
+          {vista === 'tabela' ? (
+            <LeadTabela itens={lista.slice(0, visiveis)} temRef={!!ref} seuNome={seuNome} templates={templates} selecionando={selecionando} sel={sel} onSelect={alternar}
+              onEdit={l => setForm({ lead: l })} onDelete={l => setApagar([l])} toast={toast} />
+          ) : (
           <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
             {lista.slice(0, visiveis).map(({ l, dist }) => <LeadCard key={l.id + l.status + templates.length} lead={l} dist={dist} temRef={!!ref} seuNome={seuNome} templates={templates}
               selecionando={selecionando} selecionado={sel.has(l.id)} onSelect={() => alternar(l.id)}
               onEdit={() => setForm({ lead: l })} onDelete={() => setApagar([l])} toast={toast} />)}
-          </div>
+          </div>)}
           {visiveis < lista.length && <div className="text-center"><button className="btn" onClick={() => setVisiveis(v => v + PAGINA)}>Carregar mais ({lista.length - visiveis} restantes)</button></div>}
         </>)}
 

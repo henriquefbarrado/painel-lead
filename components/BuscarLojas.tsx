@@ -1,5 +1,6 @@
 'use client'
 import PageHeader from './PageHeader'
+import EstadoVazio from './EstadoVazio'
 import { useToast } from './Toast'
 import { AlertCircle, Database, Search, SearchX } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -109,7 +110,7 @@ export default function BuscarLojas() {
         </div>)}
 
       {feito && !busy && lojas.length === 0 && (
-        <div className="card p-10 text-center text-slate-500"><SearchX className="mx-auto mb-2 text-slate-300" size={36} />Nenhuma loja sem site nesta busca.<br /><span className="text-sm">Tente outro bairro, outro segmento ou aumente a quantidade.</span></div>)}
+        <EstadoVazio icone={<SearchX size={22} />} titulo="Nenhuma loja sem site nesta busca" texto="Tente outro bairro, outro segmento ou aumente a quantidade." />)}
 
       <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         {lojas.map(l => { const ja = jaTem(l); return (

@@ -15,11 +15,9 @@ export default function Login() {
     router.push('/'); router.refresh()
   }
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-4">
-      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-indigo-600/40 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-fuchsia-600/30 blur-3xl" />
-      <form onSubmit={entrar} className="relative w-full max-w-sm space-y-4 rounded-3xl bg-white p-8 shadow-2xl">
-        <div className="logo-float mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white shadow-lg"><Store size={26} /></div>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0e17] p-4">
+      <form onSubmit={entrar} className="relative w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-white p-8 shadow-2xl">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-indigo-600 text-white"><Store size={26} /></div>
         <div className="text-center"><h1 className="text-2xl font-bold tracking-tight">Painel de Leads</h1><p className="text-sm text-slate-500">Entre para continuar</p></div>
         <input className="inp" type="email" placeholder="E-mail" required value={email} onChange={e => setEmail(e.target.value)} />
         <input className="inp" type="password" placeholder="Senha" required value={senha} onChange={e => setSenha(e.target.value)} />

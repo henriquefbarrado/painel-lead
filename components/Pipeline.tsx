@@ -9,14 +9,13 @@ import { useToast } from './Toast'
 import { todosLeads } from '@/lib/leads-api'
 import { atualizarStatus } from '@/lib/leads-acoes'
 import { SEGMENTOS } from '@/lib/segmentos'
-import { FUNIL, STATUS, STATUS_COR, type Lead, type Status } from '@/lib/types'
+import { FUNIL, STATUS, STATUS_PONTO, type Lead, type Status } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
 import { mensagemDoLead } from '@/lib/templates'
 import { useTemplates } from '@/lib/useTemplates'
 import { useUsuario } from '@/lib/useUsuario'
 
 const POR_COLUNA = 30
-const BORDA: Record<Status, string> = { novo: 'border-sky-400', contato_realizado: 'border-violet-400', interessado: 'border-amber-400', negociacao: 'border-orange-400', convertido: 'border-emerald-400', sem_interesse: 'border-slate-400' }
 
 export default function Pipeline() {
   const [leads, setLeads] = useState<Lead[]>([]), [loading, setLoading] = useState(true)
@@ -67,12 +66,15 @@ export default function Pipeline() {
               <section key={st} aria-label={STATUS[st]}
                 onDragOver={e => { e.preventDefault(); setSobre(st) }} onDragLeave={() => setSobre(s => (s === st ? null : s))}
                 onDrop={e => { e.preventDefault(); setSobre(null); const l = leads.find(x => x.id === arrastando); setArrastando(null); if (l) pedirMover(l, st) }}
-                className={`card flex w-72 shrink-0 flex-col gap-3 border-t-4 p-3 ${BORDA[st]} ${sobre === st ? 'ring-2 ring-indigo-500' : ''}`}>
-                <header className="flex items-center justify-between"><span className={`lh-chip ${STATUS_COR[st]}`}>{STATUS[st]}</span><span className="text-sm font-semibold text-slate-500">{itens.length}</span></header>
+                className={`card flex w-72 shrink-0 flex-col gap-3 p-3 transition-shadow ${sobre === st ? 'ring-2 ring-indigo-500' : ''}`}>
+                <header className="flex items-center justify-between px-1">
+                  <span className="flex items-center gap-2 text-sm font-semibold"><span className={`h-2 w-2 rounded-full ${STATUS_PONTO[st]}`} />{STATUS[st]}</span>
+                  <span className="flex items-center gap-1.5 text-xs text-slate-500"><b className="text-sm text-slate-700">{itens.length}</b>{filtrados.length > 0 && <span>· {Math.round((itens.length / filtrados.length) * 100)}%</span>}</span>
+                </header>
                 <div className="flex max-h-[65vh] flex-col gap-2 overflow-y-auto">
                   {vis.map(l => (
                     <article key={l.id} draggable onDragStart={() => setArrastando(l.id)} onDragEnd={() => { setArrastando(null); setSobre(null) }}
-                      className={`cursor-grab space-y-2 rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-sm active:cursor-grabbing ${arrastando === l.id ? 'opacity-40' : ''}`}>
+                      className={`cursor-grab space-y-2 rounded-lg border border-slate-200 bg-white p-3 text-sm transition-colors hover:border-indigo-300 active:cursor-grabbing ${arrastando === l.id ? 'opacity-40' : ''}`}>
                       <Link href={`/leads/${l.id}`} className="block truncate font-semibold hover:underline">{l.nome_loja}</Link>
                       {l.whatsapp && <p className="flex items-center gap-1.5 text-xs text-slate-500"><Phone size={12} />{l.whatsapp}</p>}
                       <ChipRetorno lead={l} />

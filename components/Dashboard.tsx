@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CalendarCheck, DatabaseBackup, LayoutDashboard, Target } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, CalendarCheck, DatabaseBackup, LayoutDashboard, Target } from 'lucide-react'
 import PageHeader from './PageHeader'
 import { useToast } from './Toast'
 import { supabase } from '@/lib/supabase/client'
@@ -12,6 +12,25 @@ import { ativo, contarPorStatus, dataHoje, situacaoFollowUp, somaTipo, taxaConve
 import { FUNIL, STATUS, STATUS_COR, type Lead } from '@/lib/types'
 
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+// Variação em % entre dois períodos (verde sobe, vermelho cai)
+function Delta({ atual, anterior }: { atual: number; anterior: number }) {
+  if (anterior === 0) return <span className="text-xs text-slate-500">{atual > 0 ? 'primeiro período' : 'sem variação'}</span>
+  const p = Math.round(((atual - anterior) / anterior) * 100)
+  return <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${p === 0 ? 'text-slate-500' : p > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{p > 0 && <ArrowUpRight size={13} />}{p < 0 && <ArrowDownRight size={13} />}{Math.abs(p)}%</span>
+}
+function Spark({ dados }: { dados: number[] }) {
+  const max = Math.max(1, ...dados), pts = dados.map((v, i) => `${(i / (dados.length - 1)) * 100},${26 - (v / max) * 24}`).join(' ')
+  return <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="h-8 w-24 shrink-0 overflow-visible text-indigo-500" aria-hidden="true"><polyline points={pts} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /></svg>
+}
+function Kpi({ titulo, valor, rodape, children }: { titulo: string; valor: string | number; rodape: React.ReactNode; children?: React.ReactNode }) {
+  return (
+    <div className="card p-4">
+      <p className="text-sm text-slate-500">{titulo}</p>
+      <div className="mt-1 flex items-end justify-between gap-3"><p className="text-2xl font-semibold tracking-tight">{valor}</p>{children}</div>
+      <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">{rodape}</p>
+    </div>
+  )
+}
 const COR_BARRA: Record<string, string> = { novo: 'bg-sky-500', contato_realizado: 'bg-violet-500', interessado: 'bg-amber-500', negociacao: 'bg-orange-500', convertido: 'bg-emerald-500', sem_interesse: 'bg-slate-400' }
 
 export default function Dashboard() {
@@ -20,7 +39,7 @@ export default function Dashboard() {
   const { toast, aviso } = useToast(), mes = dataHoje().slice(0, 7), hoje = dataHoje()
 
   const carregar = useCallback(async () => {
-    const desde = new Date(); desde.setDate(desde.getDate() - 6); desde.setHours(0, 0, 0, 0)
+    const desde = new Date(); desde.setDate(desde.getDate() - 13); desde.setHours(0, 0, 0, 0)
     const [l, f, c, m] = await Promise.all([
       todosLeads(),
       supabase().from('financeiro').select('*'),
@@ -50,6 +69,11 @@ export default function Dashboard() {
     return { key, nome: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''), n: contatos.filter(c => dataHoje(new Date(c.contatado_em)) === key).length }
   }), [contatos])
   const maxDia = Math.max(1, ...dias.map(d => d.n))
+  const contatos7 = useMemo(() => contatos.filter(c => dataHoje(new Date(c.contatado_em)) >= dias[0].key), [contatos, dias])
+  const contatosAnt = contatos.length - contatos7.length
+  const leadsSem = leads.filter(l => Date.now() - new Date(l.created_at).getTime() < 7 * 864e5).length
+  const leadsSemAnt = leads.filter(l => { const t = Date.now() - new Date(l.created_at).getTime(); return t >= 7 * 864e5 && t < 14 * 864e5 }).length
+  const mesAnt = (() => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return dataHoje(d).slice(0, 7) })()
   const doMes = fin.filter(i => i.data.startsWith(mes))
   const fechadosMes = new Set(doMes.filter(i => i.tipo === 'receita' && i.lead_id).map(i => i.lead_id)).size
   const pctMeta = Math.min(100, (fechadosMes / Math.max(1, meta)) * 100)
@@ -70,22 +94,26 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <PageHeader titulo="Início" sub="Como está sua prospecção hoje." icone={<LayoutDashboard size={24} />}>
-        <Link href="/hoje" className="btn-w"><CalendarCheck size={16} />Hoje{devidos > 0 ? ` (${devidos})` : ''}</Link>
+        <Link href="/hoje" className="btn-p"><CalendarCheck size={16} />Hoje{devidos > 0 ? ` (${devidos})` : ''}</Link>
         <button className="btn-w" onClick={backup}><DatabaseBackup size={16} />Backup</button>
       </PageHeader>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <section className="card space-y-3 p-5 lg:col-span-2">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <Kpi titulo="Leads" valor={leads.length} rodape={<><span className="font-medium text-slate-700">+{leadsSem}</span> nos últimos 7 dias <Delta atual={leadsSem} anterior={leadsSemAnt} /></>} />
+        <Kpi titulo="Contatos (7 dias)" valor={contatos7.length} rodape={<><Delta atual={contatos7.length} anterior={contatosAnt} /> vs. 7 dias antes</>}><Spark dados={dias.map(d => d.n)} /></Kpi>
+        <Kpi titulo="Conversão" valor={`${(taxaConversao(leads) * 100).toFixed(1).replace('.', ',')}%`} rodape={<>{porStatus.convertido} fechados de {leads.filter(l => l.status !== 'novo').length} abordados</>} />
+        <Kpi titulo="Receita do mês" valor={brl(somaTipo(doMes, 'receita'))} rodape={<><Delta atual={somaTipo(doMes, 'receita')} anterior={somaTipo(fin.filter(i => i.data.startsWith(mesAnt)), 'receita')} /> vs. mês anterior</>} />
+      </div>
+
+      <div className="grid gap-4">
+        <section className="card space-y-3 p-5">
           <div className="flex items-center justify-between"><h2 className="flex items-center gap-2 font-semibold"><Target size={16} />Meta do mês</h2>
             {editaMeta ? <span className="flex items-center gap-2"><input className="inp !w-20 !py-1" inputMode="numeric" value={metaTxt} onChange={e => setMetaTxt(e.target.value)} aria-label="Meta de sites fechados" /><button className="btn-p !py-1" onClick={salvarMeta}>Salvar</button></span>
               : <button className="btn !py-1 text-xs" onClick={() => setEditaMeta(true)}>Alterar meta</button>}</div>
           <p className="text-3xl font-bold">{fechadosMes} <span className="text-lg font-medium text-slate-500">de {meta} {meta === 1 ? 'site fechado' : 'sites fechados'}</span></p>
-          <div className="h-3 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuenow={fechadosMes} aria-valuemax={meta}><div className="h-full bg-gradient-to-r from-indigo-600 to-emerald-500 transition-all" style={{ width: `${pctMeta}%` }} /></div>
+          <div className="h-3 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuenow={fechadosMes} aria-valuemax={meta}><div className="h-full bg-emerald-500 transition-all" style={{ width: `${pctMeta}%` }} /></div>
           <p className="text-sm text-slate-500">Receita do mês: <b className="text-slate-900">{brl(somaTipo(doMes, 'receita'))}</b> · conta cada lead com receita lançada no mês.</p>
         </section>
-        <section className="card space-y-1 p-5"><h2 className="font-semibold">Conversão</h2>
-          <p className="text-4xl font-bold">{(taxaConversao(leads) * 100).toFixed(1).replace('.', ',')}%</p>
-          <p className="text-sm text-slate-500">{porStatus.convertido} fechados de {leads.filter(l => l.status !== 'novo').length} leads abordados.</p></section>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -101,14 +129,14 @@ export default function Dashboard() {
         <section className="card space-y-3 p-5"><h2 className="font-semibold">Leads por segmento</h2>
           {porSeg.length === 0 ? <p className="text-sm text-slate-500">Nenhum lead cadastrado.</p> : porSeg.map(([k, n]) => (
             <div key={k} className="space-y-1"><div className="flex justify-between text-sm"><span>{SEGMENTOS[k]?.nome ?? 'Sem segmento'}</span><b>{n}</b></div>
-              <div className="h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-gradient-to-r from-indigo-600 to-violet-500" style={{ width: `${(n / porSeg[0][1]) * 100}%` }} /></div></div>))}
+              <div className="h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-indigo-500" style={{ width: `${(n / porSeg[0][1]) * 100}%` }} /></div></div>))}
         </section>
       </div>
 
-      <section className="card space-y-3 p-5"><div className="flex items-center justify-between"><h2 className="font-semibold">Contatos nos últimos 7 dias</h2><b className="text-2xl">{contatos.length}</b></div>
+      <section className="card space-y-3 p-5"><div className="flex items-center justify-between"><h2 className="font-semibold">Contatos nos últimos 7 dias</h2><b className="text-2xl">{contatos7.length}</b></div>
         <div className="flex h-28 items-end gap-2">{dias.map(d => (
           <div key={d.key} className="flex h-full flex-1 flex-col items-center justify-end gap-1"><span className="text-xs text-slate-500">{d.n || ''}</span>
-            <div className="w-full rounded-t-lg bg-gradient-to-t from-indigo-600 to-violet-400" style={{ height: `${Math.max(d.n ? 8 : 3, (d.n / maxDia) * 70)}%` }} /><span className="text-xs capitalize text-slate-500">{d.nome}</span></div>))}</div>
+            <div className="w-full rounded-t-md bg-indigo-500" style={{ height: `${Math.max(d.n ? 8 : 3, (d.n / maxDia) * 70)}%` }} /><span className="text-xs capitalize text-slate-500">{d.nome}</span></div>))}</div>
       </section>
       {aviso}
     </div>

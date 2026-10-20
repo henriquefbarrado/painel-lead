@@ -21,7 +21,7 @@ export default function LeadCard({ lead, dist, temRef, seuNome, templates, selec
   selecionando?: boolean; selecionado?: boolean; onSelect?: () => void
   onEdit: () => void; onDelete: () => void; toast: (m: string) => void }) {
   const [msg, setMsg] = useState(() => mensagemDoLead(lead, seuNome, templates))
-  const [aberto, setAberto] = useState(false)
+  const [aberto, setAberto] = useState(false), [verMsg, setVerMsg] = useState(false)
   const tem = temMensagem(lead.status)
   const nota = lead.status === 'convertido' ? 'Cliente fechado. Nenhuma mensagem de venda necessária.' : 'Sem interesse. Não enviar mais mensagens para este lead.'
   const semLoc = lead.latitude == null || lead.longitude == null
@@ -36,11 +36,11 @@ export default function LeadCard({ lead, dist, temRef, seuNome, templates, selec
   }
   const linha = 'flex items-start gap-2 text-sm text-slate-600'
   return (
-    <div className={`card card-hover space-y-4 p-5 ${selecionado ? 'ring-2 ring-indigo-500' : ''}`}>
+    <div className={`card card-hover space-y-3.5 p-4 ${selecionado ? 'ring-2 ring-indigo-500' : ''}`}>
       <div className="flex items-start gap-3">
         {selecionando
           ? <input type="checkbox" className="mt-3 h-5 w-5 shrink-0 accent-indigo-600" checked={!!selecionado} onChange={onSelect} aria-label={`Selecionar ${lead.nome_loja}`} />
-          : <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-lg font-bold text-white">{lead.nome_loja[0]?.toUpperCase()}</div>}
+          : <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-indigo-500/10 text-base font-semibold text-indigo-600">{lead.nome_loja[0]?.toUpperCase()}</div>}
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-semibold"><Link href={`/leads/${lead.id}`} className="hover:underline">{lead.nome_loja}</Link></h3>
           <p className="truncate text-sm text-slate-500">{lead.responsavel || lead.categoria || '—'}</p>
@@ -59,13 +59,14 @@ export default function LeadCard({ lead, dist, temRef, seuNome, templates, selec
         {lead.segmento && SEGMENTOS[lead.segmento] && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">{SEGMENTOS[lead.segmento].nome}</span>}
         {(lead.solucoes || []).map(s => <span key={s} className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700">{SOLUCOES[s] ?? s}</span>)}
       </div>
-      {tem ? <textarea className="inp !bg-slate-50 text-slate-600" rows={4} value={msg} onChange={e => setMsg(e.target.value)} aria-label="Mensagem" /> : <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-500">{nota}</p>}
+      {tem ? (verMsg && <textarea className="inp !bg-slate-50 text-slate-600" rows={4} value={msg} onChange={e => setMsg(e.target.value)} aria-label="Mensagem" />) : <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">{nota}</p>}
       <div className="flex flex-wrap gap-2">
         {tem && <>
           <button className="btn-wa" onClick={enviar}><MessageCircle size={15} />WhatsApp</button>
-          <button className="btn" onClick={copiar}><Copy size={15} />Copiar mensagem</button>
+          <button className="btn" onClick={copiar}><Copy size={15} />Copiar</button>
+          <button className="btn" onClick={() => setVerMsg(!verMsg)} aria-expanded={verMsg}>{verMsg ? 'Ocultar mensagem' : 'Ver mensagem'}</button>
         </>}
-        <Link href={`/leads/${lead.id}`} className="btn"><ExternalLink size={15} />Abrir ficha</Link>
+        <Link href={`/leads/${lead.id}`} className="btn"><ExternalLink size={15} />Ficha</Link>
         <button className="btn" onClick={() => setAberto(!aberto)}>{aberto ? 'Ocultar' : 'Mais'}</button>
       </div>
       {aberto && (

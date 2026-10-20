@@ -19,6 +19,11 @@ export const STATUS_COR: Record<Status, string> = {
   negociacao: 'bg-orange-100 text-orange-700', convertido: 'bg-emerald-100 text-emerald-700',
 }
 
+export const STATUS_PONTO: Record<Status, string> = {
+  novo: 'bg-sky-400', contato_realizado: 'bg-violet-400', interessado: 'bg-amber-400',
+  negociacao: 'bg-orange-400', convertido: 'bg-emerald-400', sem_interesse: 'bg-slate-400',
+}
+
 // Ordem do funil (a mesma do Kanban). 'sem_interesse' é a saída de qualquer etapa.
 export const FUNIL: Status[] = ['novo', 'contato_realizado', 'interessado', 'negociacao', 'convertido', 'sem_interesse']
 export const MOTIVOS_PERDA = ['Já tem site', 'Sem orçamento', 'Não respondeu', 'Não tem interesse em site', 'Escolheu outro fornecedor', 'Fechou o negócio', 'Outro']

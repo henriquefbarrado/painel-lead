@@ -30,7 +30,7 @@ export default function FilaEnvio({ leads, seuNome, templates = [], onSent, onCl
           <p className="text-sm font-semibold">Modo envio {l ? `· ${i + 1} de ${leads.length}` : ''}</p>
           <button className="rounded-lg p-1 text-slate-400 hover:text-slate-600" onClick={onClose} title="Fechar"><X size={18} /></button>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-gradient-to-r from-indigo-600 to-violet-500 transition-all" style={{ width: `${(Math.min(i, leads.length) / leads.length) * 100}%` }} /></div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-indigo-500 transition-all" style={{ width: `${(Math.min(i, leads.length) / leads.length) * 100}%` }} /></div>
         {!l ? (
           <div className="space-y-3 py-6 text-center">
             <p className="text-lg font-bold">Fila concluída 🎉</p>
