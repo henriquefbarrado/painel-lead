@@ -59,7 +59,7 @@ export default function CommandPalette({ aberto, onAlternar, onFechar, paginas, 
         <div className="flex items-center gap-3 border-b border-slate-200 px-4">
           <Search size={16} className="shrink-0 text-slate-400" />
           <input ref={input} value={q} onChange={e => setQ(e.target.value)} onKeyDown={teclas} placeholder="Buscar lead, página ou ação…" aria-label="Buscar"
-            className="w-full bg-transparent py-3.5 text-sm outline-none placeholder:text-slate-500" />
+            className="w-full bg-transparent py-3.5 text-sm outline-none focus:outline-none focus-visible:outline-none placeholder:text-slate-500" />
           <span className="kbd">Esc</span>
         </div>
         <div ref={lista} className="max-h-80 overflow-y-auto p-2" role="listbox">
