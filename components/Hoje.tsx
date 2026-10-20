@@ -8,7 +8,7 @@ import { useToast } from './Toast'
 import { supabase } from '@/lib/supabase/client'
 import { todosLeads } from '@/lib/leads-api'
 import { ativo, dataHoje, situacaoFollowUp } from '@/lib/metricas'
-import { STATUS, STATUS_COR, type Lead } from '@/lib/types'
+import { STATUS, STATUS_COR, naoAbordado, type Lead } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
 import { mensagemDoLead } from '@/lib/templates'
 import { useTemplates } from '@/lib/useTemplates'
@@ -30,7 +30,7 @@ export default function Hoje() {
   const { atrasados, deHoje, semData } = useMemo(() => {
     const vivos = leads.filter(l => ativo(l.status))
     const por = (s: string) => vivos.filter(l => situacaoFollowUp(l.proximo_contato, hoje) === s).sort((a, b) => (a.proximo_contato || '').localeCompare(b.proximo_contato || ''))
-    return { atrasados: por('atrasado'), deHoje: por('hoje'), semData: vivos.filter(l => l.status !== 'novo' && !l.proximo_contato) }
+    return { atrasados: por('atrasado'), deHoje: por('hoje'), semData: vivos.filter(l => !naoAbordado(l.status) && !l.proximo_contato) }
   }, [leads, hoje])
 
   async function reagendar(l: Lead, data: string) {

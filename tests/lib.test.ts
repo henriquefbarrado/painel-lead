@@ -17,6 +17,11 @@ test('conversão = fechados ÷ abordados (novos não contam)', () => {
   assert.equal(taxaConversao([]), 0)
 })
 
+test('conversão: "entrar em contato" ainda não é abordado', () => {
+  const ls = [{ status: 'novo' }, { status: 'entrar_em_contato' }, { status: 'contato_realizado' }, { status: 'convertido' }] as const
+  assert.equal(taxaConversao([...ls]), 1 / 2)
+})
+
 test('financeiro: pendente não entra no lucro, só em "a receber"', () => {
   const l = [L({ valor: 1000 }), L({ valor: 500, situacao: 'pendente' }), L({ tipo: 'despesa', valor: 200 })]
   assert.equal(somaTipo(l, 'receita'), 1000)

@@ -2,9 +2,12 @@ import type { Status } from './types'
 
 // Para mudar os textos, edite só aqui. Marcadores: {SEU_NOME} e {NOME_DA_LOJA}.
 // Status que NÃO estão nesta lista (sem_interesse e convertido) não têm mensagem: ficam só com a tag.
+const PRIMEIRO_CONTATO =
+    'Olá, tudo bem? Aqui é o {SEU_NOME}, eu crio sites e páginas para negócios da região. Vi a {NOME_DA_LOJA} e queria fazer uma pergunta rápida: vocês já têm um site ou página própria para os clientes encontrarem e entrarem em contato? Se ainda não tiver, posso te mostrar um exemplo bem simples de como ficaria, sem compromisso.'
+
 export const MESSAGES: Partial<Record<Status, string>> = {
-  novo:
-    'Olá, tudo bem? Aqui é o {SEU_NOME}, eu crio sites e páginas para negócios da região. Vi a {NOME_DA_LOJA} e queria fazer uma pergunta rápida: vocês já têm um site ou página própria para os clientes encontrarem e entrarem em contato? Se ainda não tiver, posso te mostrar um exemplo bem simples de como ficaria, sem compromisso.',
+  novo: PRIMEIRO_CONTATO,
+  entrar_em_contato: PRIMEIRO_CONTATO, // mesma mensagem do "Novo": é a fila de quem vai receber o primeiro contato
   contato_realizado:
     'Oi, tudo bem? {SEU_NOME} aqui de novo. Sei que a rotina da {NOME_DA_LOJA} é corrida, então vou ser breve: posso te mandar um exemplo de como ficaria uma página para vocês? É só responder "pode" que eu envio. Se não fizer sentido agora, sem problema, é só me avisar.',
   interessado:

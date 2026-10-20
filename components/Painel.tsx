@@ -25,7 +25,7 @@ import { baixar } from '@/lib/exportar'
 import { leadsParaCsv } from '@/lib/leads-csv'
 import { chavesDoLead } from '@/lib/importar'
 import { situacaoFollowUp, dataHoje } from '@/lib/metricas'
-import { FUNIL, STATUS, STATUS_PONTO, type Lead, type LeadInput, type Status } from '@/lib/types'
+import { FUNIL, STATUS, STATUS_PONTO, naoAbordado, type Lead, type LeadInput, type Status } from '@/lib/types'
 import { RAIOS, distanceKm } from '@/lib/geo'
 
 const PAGINA = 24
@@ -123,7 +123,7 @@ export default function Painel() {
     setFila(q)
   }
   async function marcarEnviado(l: Lead) {
-    if (l.status !== 'novo') return
+    if (!naoAbordado(l.status)) return
     const erro = await atualizarStatus([l.id], 'contato_realizado')
     if (erro) toast('Erro ao atualizar status: ' + erro, 'erro'); else carregar()
   }

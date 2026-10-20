@@ -13,7 +13,7 @@ import { supabase } from '@/lib/supabase/client'
 import { atualizarStatus } from '@/lib/leads-acoes'
 import { TIPOS_CONTATO, type Contato, type TipoContato } from '@/lib/contatos'
 import { SEGMENTOS, SOLUCOES } from '@/lib/segmentos'
-import { FUNIL, STATUS, STATUS_COR, type Lead, type LeadInput, type Status } from '@/lib/types'
+import { FUNIL, STATUS, STATUS_COR, naoAbordado, type Lead, type LeadInput, type Status } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
 import { mensagemDoLead } from '@/lib/templates'
 import { useTemplates } from '@/lib/useTemplates'
@@ -69,7 +69,7 @@ export default function LeadDetalhe({ id }: { id: string }) {
     const { error } = await supabase().from('contatos').insert({ lead_id: id, user_nome: usuario.nome, user_email: usuario.email, tipo: t, nota: n.trim() || null, contatado_em: iso })
     if (error) { setSalvando(false); return toast('Erro ao registrar: ' + error.message, 'erro') }
     await supabase().from('leads').update({ ultimo_contato: iso }).eq('id', id) // ignora erro se a migração ainda não rodou
-    if (avancar && lead.status === 'novo') await atualizarStatus([id], 'contato_realizado')
+    if (avancar && naoAbordado(lead.status)) await atualizarStatus([id], 'contato_realizado')
     setSalvando(false); setNota(''); setQuando(agoraLocal()); toast('Contato registrado', 'ok'); carregar()
   }
   function abrirWhats() {

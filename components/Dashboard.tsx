@@ -9,7 +9,7 @@ import { todosLeads } from '@/lib/leads-api'
 import { baixar } from '@/lib/exportar'
 import { SEGMENTOS } from '@/lib/segmentos'
 import { ativo, contarPorStatus, dataHoje, situacaoFollowUp, somaTipo, taxaConversao, type Lancamento } from '@/lib/metricas'
-import { FUNIL, STATUS, STATUS_COR, type Lead } from '@/lib/types'
+import { FUNIL, STATUS, STATUS_COR, naoAbordado, type Lead } from '@/lib/types'
 
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 // Variação em % entre dois períodos (verde sobe, vermelho cai)
@@ -31,7 +31,7 @@ function Kpi({ titulo, valor, rodape, children }: { titulo: string; valor: strin
     </div>
   )
 }
-const COR_BARRA: Record<string, string> = { novo: 'bg-sky-500', contato_realizado: 'bg-violet-500', interessado: 'bg-amber-500', negociacao: 'bg-orange-500', convertido: 'bg-emerald-500', sem_interesse: 'bg-slate-400' }
+const COR_BARRA: Record<string, string> = { novo: 'bg-sky-500', entrar_em_contato: 'bg-indigo-500', contato_realizado: 'bg-violet-500', interessado: 'bg-amber-500', negociacao: 'bg-orange-500', convertido: 'bg-emerald-500', sem_interesse: 'bg-slate-400' }
 
 export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]), [fin, setFin] = useState<Lancamento[]>([]), [contatos, setContatos] = useState<{ contatado_em: string }[]>([])
@@ -101,7 +101,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Kpi titulo="Leads" valor={leads.length} rodape={<><span className="font-medium text-slate-700">+{leadsSem}</span> nos últimos 7 dias <Delta atual={leadsSem} anterior={leadsSemAnt} /></>} />
         <Kpi titulo="Contatos (7 dias)" valor={contatos7.length} rodape={<><Delta atual={contatos7.length} anterior={contatosAnt} /> vs. 7 dias antes</>}><Spark dados={dias.map(d => d.n)} /></Kpi>
-        <Kpi titulo="Conversão" valor={`${(taxaConversao(leads) * 100).toFixed(1).replace('.', ',')}%`} rodape={<>{porStatus.convertido} fechados de {leads.filter(l => l.status !== 'novo').length} abordados</>} />
+        <Kpi titulo="Conversão" valor={`${(taxaConversao(leads) * 100).toFixed(1).replace('.', ',')}%`} rodape={<>{porStatus.convertido} fechados de {leads.filter(l => !naoAbordado(l.status)).length} abordados</>} />
         <Kpi titulo="Receita do mês" valor={brl(somaTipo(doMes, 'receita'))} rodape={<><Delta atual={somaTipo(doMes, 'receita')} anterior={somaTipo(fin.filter(i => i.data.startsWith(mesAnt)), 'receita')} /> vs. mês anterior</>} />
       </div>
 
