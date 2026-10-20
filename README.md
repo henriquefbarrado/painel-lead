@@ -26,6 +26,8 @@ Painel interno para organizar a prospecção comercial de lojas: cadastro de lea
 - **Busca de lojas**: contador de cota do mês (500 do plano grátis), cache de 24 h (repetir a busca não gasta cota), limite de 5 buscas por minuto, estados de carregando/erro/sem resultado e prévia com seleção antes de salvar.
 - **Financeiro**: receita vinculada ao lead (marca o lead como Convertido), categorias, a receber/recebido, despesas recorrentes, editar e excluir, ticket médio, conversão, custo por lead e receita por segmento.
 - **Tema escuro (padrão) e claro**, com botão no menu. Layout responsivo para computador e celular.
+- **Venda automática no Financeiro**: ao marcar um lead como **Convertido** (pipeline, detalhe do lead, lista ou edição), abre uma janela pedindo o valor e lança a receita sozinha, ligada ao lead. Não duplica se o lead já tem receita.
+- **Logs de busca (só administrador)**: aba com o histórico de todas as buscas de lojas (quem, o quê, onde, quantas lojas, cota gasta, cache ou API, erros). Visível apenas para o e-mail definido em `lib/usuarios.ts` e protegido também no banco (`supabase/logs-busca.sql`).
 
 ## Tecnologias
 
@@ -69,6 +71,7 @@ lib/
 middleware.ts               Bloqueia páginas para quem não está logado
 supabase/
   melhorias.sql             Follow-up, templates, meta, cota/cache da busca, financeiro x lead
+  logs-busca.sql            Tabela dos logs de busca (só o administrador lê)
   por-usuario.sql           Separa os leads por usuário (dono do lead + regras de acesso)
   schema.sql                Tabela de leads
   segmentos.sql             Colunas de segmento e soluções (rode depois do schema.sql)

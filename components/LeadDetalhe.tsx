@@ -6,6 +6,7 @@ import { ArrowLeft, CalendarClock, Copy, Mail, MapPin, MessageCircle, Phone, Sti
 import ConfirmDialog from './ConfirmDialog'
 import LeadForm from './LeadForm'
 import MotivoPerdaDialog from './MotivoPerdaDialog'
+import { useVenda } from './VendaDialog'
 import { ChipRetorno, dataBr } from './LeadCard'
 import { useToast } from './Toast'
 import { supabase } from '@/lib/supabase/client'
@@ -26,7 +27,7 @@ const maisDias = (n: number) => { const d = new Date(); d.setDate(d.getDate() + 
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function LeadDetalhe({ id }: { id: string }) {
-  const router = useRouter(), usuario = useUsuario(), { templates } = useTemplates(), { toast, aviso } = useToast()
+  const router = useRouter(), usuario = useUsuario(), { templates } = useTemplates(), { toast, aviso } = useToast(), { pedirVenda, vendaDialog } = useVenda()
   const [lead, setLead] = useState<Lead | null>(null), [loading, setLoading] = useState(true), [meuId, setMeuId] = useState('')
   const [contatos, setContatos] = useState<Contato[]>([]), [receitas, setReceitas] = useState<{ id: string; descricao: string; valor: number; situacao?: string }[]>([])
   const [msg, setMsg] = useState(''), [proximo, setProximo] = useState(''), [acao, setAcao] = useState('')
@@ -53,7 +54,8 @@ export default function LeadDetalhe({ id }: { id: string }) {
     if (!lead) return
     const erro = await atualizarStatus([lead.id], s, motivo)
     if (erro) return toast('Erro ao atualizar status: ' + erro, 'erro')
-    toast(s === 'convertido' ? 'Fechou! Registre a receita abaixo.' : 'Status atualizado', 'ok'); carregar()
+    toast(s === 'convertido' ? 'Fechou! 🎉' : 'Status atualizado', 'ok'); carregar()
+    if (s === 'convertido' && lead.status !== 'convertido') pedirVenda([lead], carregar)
   }
   async function salvarRetorno(data = proximo) {
     const { error } = await supabase().from('leads').update({ proximo_contato: data || null, proxima_acao: acao.trim() || null }).eq('id', id)
@@ -78,6 +80,7 @@ export default function LeadDetalhe({ id }: { id: string }) {
   async function salvarLead(d: LeadInput) {
     const { error } = await supabase().from('leads').update(d).eq('id', id)
     if (error) return toast('Erro ao salvar: ' + error.message, 'erro')
+    if (lead && d.status === 'convertido' && lead.status !== 'convertido') pedirVenda([lead], carregar)
     toast('Lead salvo', 'ok'); setEditar(false); carregar()
   }
   async function excluirContato(c: Contato) {
@@ -170,6 +173,7 @@ export default function LeadDetalhe({ id }: { id: string }) {
         </div>
       </div>
 
+      {vendaDialog}
       {editar && <LeadForm lead={l} onSave={salvarLead} onCancel={() => setEditar(false)} />}
       {apagar && <ConfirmDialog titulo="Excluir lead?" texto={`"${l.nome_loja}" e o histórico de contato serão removidos. Essa ação não pode ser desfeita.`} onCancel={() => setApagar(false)}
         onConfirm={async () => { const { error } = await supabase().from('leads').delete().eq('id', id); if (error) { toast('Erro ao excluir: ' + error.message, 'erro'); setApagar(false) } else router.push('/leads') }} />}

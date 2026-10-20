@@ -60,6 +60,12 @@ async function usoDoMes(db: ReturnType<typeof supabaseServidor>) {
   return { usado: (data || []).reduce((s, r) => s + (r.qtd as number), 0), ok: true }
 }
 
+type LogBusca = { segmento: string; local: string; qtd_pedida: number; resultados?: number | null; sem_site?: number | null; cota_gasta?: number; do_cache?: boolean; erro?: string }
+// Registra a busca em logs_busca (só o administrador consegue ler). Falha de log nunca derruba a busca.
+async function registrarLog(db: ReturnType<typeof supabaseServidor>, email: string | undefined, l: LogBusca) {
+  try { await db.from('logs_busca').insert({ usuario: email ?? null, ...l }) } catch {}
+}
+
 // GET: devolve o consumo do mês para o contador da tela.
 export async function GET() {
   const db = supabaseServidor()
@@ -88,23 +94,27 @@ export async function POST(req: Request) {
   const { data: emCache } = await db.from('busca_cache').select('resultado,created_at').eq('chave', chave).gte('created_at', desde).maybeSingle()
   if (emCache) {
     await db.from('buscas').insert({ consulta: chave, qtd: 0, do_cache: true })
+    const rc = emCache.resultado as { total?: number; lojas?: unknown[] }
+    await registrarLog(db, user.email, { segmento, local, qtd_pedida: qtd, resultados: rc.total ?? null, sem_site: rc.lojas?.length ?? null, cota_gasta: 0, do_cache: true })
     return NextResponse.json({ ...(emCache.resultado as object), cache: true, cacheEm: emCache.created_at, usado, limite: LIMITE_MES })
   }
 
   // 2) Limite de frequência (evita clique repetido queimando a cota).
   const { count } = await db.from('buscas').select('id', { count: 'exact', head: true })
     .eq('user_id', user.id).eq('do_cache', false).gte('created_at', new Date(Date.now() - 60_000).toISOString())
-  if ((count ?? 0) >= BUSCAS_POR_MINUTO) return NextResponse.json({ erro: 'Muitas buscas em sequência. Aguarde um minuto e tente de novo.' }, { status: 429 })
+  if ((count ?? 0) >= BUSCAS_POR_MINUTO) { await registrarLog(db, user.email, { segmento, local, qtd_pedida: qtd, erro: 'Limite de buscas por minuto' }); return NextResponse.json({ erro: 'Muitas buscas em sequência. Aguarde um minuto e tente de novo.' }, { status: 429 }) }
 
   // 3) Cota mensal do plano grátis.
   if (ow && usado + qtd > LIMITE_MES) {
     const resta = Math.max(0, LIMITE_MES - usado)
+    await registrarLog(db, user.email, { segmento, local, qtd_pedida: qtd, erro: `Cota insuficiente (restam ${resta})` })
     return NextResponse.json({ erro: `Sua cota do mês não comporta ${qtd} lojas (restam ${resta} de ${LIMITE_MES}). Escolha uma quantidade menor.`, usado, limite: LIMITE_MES }, { status: 429 })
   }
 
   const res = ow ? await viaOpenWebNinja(ow, segmento, local, qtd) : await viaGoogle(google!, segmento, local)
-  if ('erro' in res) return NextResponse.json(res, { status: 502 })
+  if ('erro' in res) { await registrarLog(db, user.email, { segmento, local, qtd_pedida: qtd, erro: res.erro }); return NextResponse.json(res, { status: 502 }) }
   await db.from('buscas').insert({ consulta: chave, qtd: res.total, do_cache: false })
+  await registrarLog(db, user.email, { segmento, local, qtd_pedida: qtd, resultados: res.total, sem_site: res.lojas.length, cota_gasta: res.total, do_cache: false })
   await db.from('busca_cache').upsert({ chave, resultado: res, created_at: new Date().toISOString() })
   return NextResponse.json({ ...res, cache: false, usado: usado + res.total, limite: LIMITE_MES })
 }

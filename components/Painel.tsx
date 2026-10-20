@@ -1,6 +1,7 @@
 'use client'
 import PageHeader from './PageHeader'
 import ConfirmDialog from './ConfirmDialog'
+import { useVenda } from './VendaDialog'
 import FilaEnvio from './FilaEnvio'
 import MotivoPerdaDialog from './MotivoPerdaDialog'
 import LeadCard from './LeadCard'
@@ -46,7 +47,7 @@ export default function Painel() {
   const [apagar, setApagar] = useState<Lead[] | null>(null)
   const [selecionando, setSelecionando] = useState(false), [sel, setSel] = useState<Set<string>>(new Set())
   const [statusMassa, setStatusMassa] = useState<'' | Status>(''), [perdendo, setPerdendo] = useState<{ ids: string[]; nome: string } | null>(null)
-  const { toast, aviso } = useToast()
+  const { toast, aviso } = useToast(), { pedirVenda, vendaDialog } = useVenda()
   const [vista, setVista] = useState<'cards' | 'tabela'>('cards')
   useEffect(() => { try { if (localStorage.getItem('vista-leads') === 'tabela') setVista('tabela') } catch {} }, [])
   function trocarVista(v: 'cards' | 'tabela') { setVista(v); try { localStorage.setItem('vista-leads', v) } catch {} }
@@ -67,6 +68,7 @@ export default function Painel() {
     const q = form?.lead ? supabase().from('leads').update(d).eq('id', form.lead.id) : supabase().from('leads').insert(d)
     const { error } = await q
     if (error) return toast('Erro ao salvar: ' + error.message, 'erro')
+    if (form?.lead && d.status === 'convertido' && form.lead.status !== 'convertido') pedirVenda([form.lead])
     toast('Lead salvo', 'ok'); setForm(null); carregar()
   }
   async function excluir(ls: Lead[]) {
@@ -77,6 +79,7 @@ export default function Painel() {
   async function aplicarStatus(ids: string[], s: Status, motivo?: string) {
     const erro = await atualizarStatus(ids, s, motivo)
     if (erro) return toast('Erro ao atualizar status: ' + erro, 'erro')
+    if (s === 'convertido') pedirVenda(leads.filter(l => ids.includes(l.id) && l.status !== 'convertido'))
     toast(ids.length === 1 ? 'Status atualizado' : `${ids.length} leads atualizados`, 'ok'); setSel(new Set()); setStatusMassa(''); carregar()
   }
 
@@ -227,6 +230,7 @@ export default function Painel() {
         </>)}
 
       {fila && <FilaEnvio leads={fila} seuNome={seuNome} templates={templates} onSent={marcarEnviado} onClose={() => setFila(null)} />}
+      {vendaDialog}
       {apagar && <ConfirmDialog titulo={apagar.length === 1 ? 'Excluir lead?' : `Excluir ${apagar.length} leads?`}
         texto={apagar.length === 1 ? `"${apagar[0].nome_loja}" será removido e essa ação não pode ser desfeita.` : 'Eles serão removidos junto com o histórico de contato, e essa ação não pode ser desfeita. Dica: exporte o CSV antes.'}
         onCancel={() => setApagar(null)} onConfirm={async () => { await excluir(apagar); setApagar(null) }} />}

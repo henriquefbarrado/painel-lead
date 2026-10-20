@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Kanban, MessageCircle, Phone } from 'lucide-react'
 import PageHeader from './PageHeader'
 import MotivoPerdaDialog from './MotivoPerdaDialog'
+import { useVenda } from './VendaDialog'
 import { ChipRetorno } from './LeadCard'
 import { useToast } from './Toast'
 import { todosLeads } from '@/lib/leads-api'
@@ -22,7 +23,7 @@ export default function Pipeline() {
   const [busca, setBusca] = useState(''), [fSeg, setFSeg] = useState('')
   const [arrastando, setArrastando] = useState<string | null>(null), [sobre, setSobre] = useState<Status | null>(null)
   const [perdendo, setPerdendo] = useState<Lead | null>(null), [mais, setMais] = useState<Set<Status>>(new Set())
-  const { toast, aviso } = useToast(), usuario = useUsuario(), { templates } = useTemplates()
+  const { toast, aviso } = useToast(), usuario = useUsuario(), { templates } = useTemplates(), { pedirVenda, vendaDialog } = useVenda()
 
   const carregar = useCallback(async () => {
     const r = await todosLeads()
@@ -42,7 +43,8 @@ export default function Pipeline() {
     setLeads(ls => ls.map(x => x.id === l.id ? { ...x, status: para, motivo_perda: para === 'sem_interesse' ? motivo ?? null : null } : x)) // otimista
     const erro = await atualizarStatus([l.id], para, motivo)
     if (erro) { setLeads(antes); return toast('Erro ao mover: ' + erro, 'erro') }
-    toast(para === 'convertido' ? `${l.nome_loja} fechou! Registre a receita no Financeiro.` : `${l.nome_loja} → ${STATUS[para]}`, 'ok')
+    toast(para === 'convertido' ? `${l.nome_loja} fechou! 🎉` : `${l.nome_loja} → ${STATUS[para]}`, 'ok')
+    if (para === 'convertido') pedirVenda([l])
   }
   function pedirMover(l: Lead, para: Status) { if (para === 'sem_interesse' && l.status !== para) setPerdendo(l); else mover(l, para) }
   function whats(l: Lead) {
@@ -53,6 +55,7 @@ export default function Pipeline() {
 
   return (
     <div className="space-y-6">
+      {vendaDialog}
       <PageHeader titulo="Pipeline" sub="Arraste os cards entre as etapas (no celular, use “Mover para”)." icone={<Kanban size={24} />} />
       <div className="card grid gap-3 p-4 sm:grid-cols-2">
         <input className="inp" placeholder="Buscar por loja ou cidade" value={busca} onChange={e => setBusca(e.target.value)} aria-label="Buscar" />

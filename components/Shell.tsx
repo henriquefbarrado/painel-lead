@@ -2,10 +2,11 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { CalendarCheck, FileText, FileSpreadsheet, Kanban, LayoutDashboard, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Store, Sun, Users, Wallet, X, type LucideIcon } from 'lucide-react'
+import { CalendarCheck, FileText, FileSpreadsheet, Kanban, LayoutDashboard, LogOut, Menu, Moon, ScrollText, PanelLeftClose, PanelLeftOpen, Search, Store, Sun, Users, Wallet, X, type LucideIcon } from 'lucide-react'
 import CommandPalette from './CommandPalette'
 import { supabase } from '@/lib/supabase/client'
 import { useUsuario } from '@/lib/useUsuario'
+import { ehAdmin } from '@/lib/usuarios'
 
 const GRUPOS: { titulo: string; links: readonly (readonly [string, string, LucideIcon])[] }[] = [
   { titulo: '', links: [['/', 'Início', LayoutDashboard]] },
@@ -22,6 +23,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname(), router = useRouter()
   const [open, setOpen] = useState(false), [escuro, setEscuro] = useState(true), [compacto, setCompacto] = useState(false), [paleta, setPaleta] = useState(false)
   const u = useUsuario()
+  const grupos = ehAdmin(u?.email) ? GRUPOS.map(g => g.titulo === 'Gestão' ? { ...g, links: [...g.links, ['/logs', 'Logs de busca', ScrollText] as const] } : g) : GRUPOS
   useEffect(() => { setEscuro(document.documentElement.classList.contains('dark')); try { setCompacto(localStorage.getItem('menu') === 'compacto') } catch {} }, [])
   const tema = useCallback(() => { const d = document.documentElement.classList.toggle('dark'); setEscuro(d); localStorage.setItem('tema', d ? 'escuro' : 'claro') }, [])
   function alternarMenu() { const c = !compacto; setCompacto(c); try { localStorage.setItem('menu', c ? 'compacto' : 'aberto') } catch {} }
@@ -53,7 +55,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <Search size={15} className="shrink-0" /><span className={`flex-1 text-left ${esc}`}>Buscar…</span><span className={`rounded border border-white/15 px-1 text-[10px] ${esc}`}>Ctrl K</span>
           </button>
           <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {GRUPOS.map(g => (
+            {grupos.map(g => (
               <div key={g.titulo || 'topo'} className="space-y-0.5">
                 {g.titulo && <p className={`mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-white/30 ${esc}`}>{g.titulo}</p>}
                 {g.links.map(([href, label, Icon]) => {
@@ -86,7 +88,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <Link key={href} href={href} onClick={() => setOpen(false)} className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${ativa(path, href) ? 'text-indigo-300' : 'text-white/50'}`}><Icon size={20} />{label}</Link>))}
         <button onClick={() => setOpen(!open)} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-white/50"><Menu size={20} />Mais</button>
       </nav>
-      <CommandPalette aberto={paleta} onAlternar={alternarPaleta} onFechar={fecharPaleta} paginas={LINKS} escuro={escuro} onTema={tema} />
+      <CommandPalette aberto={paleta} onAlternar={alternarPaleta} onFechar={fecharPaleta} paginas={grupos.flatMap(g => g.links)} escuro={escuro} onTema={tema} />
     </div>
   )
 }
