@@ -1,4 +1,5 @@
 'use client'
+<<<<<<< HEAD
 import { useCallback, useRef, useState } from 'react'
 import { PartyPopper } from 'lucide-react'
 import { useToast } from './Toast'
@@ -9,19 +10,104 @@ import type { Lead } from '@/lib/types'
 // Ao marcar um lead como Convertido: pergunta o valor e lança a receita no Financeiro, ligada ao lead.
 export function useVenda() {
   const [fila, setFila] = useState<Lead[]>([]), depois = useRef<(() => void) | undefined>()
+=======
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { PartyPopper } from 'lucide-react'
+import { useToast } from './Toast'
+import { supabase } from '@/lib/supabase/client'
+import { CATEGORIAS_RECEITA } from '@/lib/metricas'
+import { totalDaVenda } from '@/lib/precos'
+import { carregarPrecos, categoriaDaVenda, lancarVenda, registrarVenda, semReceita } from '@/lib/vendas'
+import type { Lead } from '@/lib/types'
+
+type Auto = { id: string; lead: Lead; valor: number }
+const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+// Ao marcar Convertido: se as soluções do lead têm preço cadastrado (Financeiro > Preços das soluções),
+// a receita é lançada sozinha como "A receber". Sem preço, abre a janela pedindo o valor.
+export function useVenda() {
+  const [fila, setFila] = useState<Lead[]>([]), [auto, setAuto] = useState<Auto[]>([]), depois = useRef<(() => void) | undefined>()
+>>>>>>> 4aa413e (tema corrigido)
   const pedirVenda = useCallback(async (leads: Lead[], aoTerminar?: () => void) => {
     const livres = new Set(await semReceita(leads.map(l => l.id)))
     const q = leads.filter(l => livres.has(l.id))
     if (!q.length) return
+<<<<<<< HEAD
     depois.current = aoTerminar; setFila(q)
   }, [])
   const vendaDialog = fila.length ? (
     <VendaDialog key={fila[0].id} lead={fila[0]} resto={fila.length - 1}
       onFechar={() => { if (fila.length === 1) { depois.current?.(); depois.current = undefined } setFila(f => f.slice(1)) }} />
+=======
+    const precos = await carregarPrecos(), feitas: Auto[] = [], manuais: Lead[] = []
+    for (const l of q) {
+      const v = totalDaVenda(l, precos)
+      if (v <= 0) { manuais.push(l); continue }
+      const r = await lancarVenda(l, v, 'pendente', categoriaDaVenda(l))
+      if (r.id) feitas.push({ id: r.id, lead: l, valor: v }); else manuais.push(l)
+    }
+    if (feitas.length) setAuto(feitas)
+    if (manuais.length) { depois.current = aoTerminar; setFila(manuais) } else aoTerminar?.()
+  }, [])
+  const vendaDialog = (auto.length > 0 || fila.length > 0) ? (
+    <>
+      {auto.length > 0 && <VendaAuto itens={auto} onFechar={() => setAuto([])} />}
+      {fila.length > 0 && <VendaDialog key={fila[0].id} lead={fila[0]} resto={fila.length - 1}
+        onFechar={() => { if (fila.length === 1) { depois.current?.(); depois.current = undefined } setFila(f => f.slice(1)) }} />}
+    </>
+>>>>>>> 4aa413e (tema corrigido)
   ) : null
   return { pedirVenda, vendaDialog }
 }
 
+<<<<<<< HEAD
+=======
+// Aviso das receitas lançadas sozinhas, com Desfazer / Editar valor / Marcar recebido.
+function VendaAuto({ itens, onFechar }: { itens: Auto[]; onFechar: () => void }) {
+  const { toast, aviso } = useToast()
+  const [editando, setEditando] = useState(false), [valor, setValor] = useState(''), [busy, setBusy] = useState(false)
+  useEffect(() => { if (editando) return; const t = setTimeout(onFechar, 15000); return () => clearTimeout(t) }, [editando, onFechar])
+  const ids = itens.map(i => i.id), total = itens.reduce((s, i) => s + i.valor, 0)
+
+  async function desfazer() {
+    setBusy(true); const { error } = await supabase().from('financeiro').delete().in('id', ids); setBusy(false)
+    if (error) return toast('Erro ao desfazer: ' + error.message, 'erro'); onFechar()
+  }
+  async function recebido() {
+    setBusy(true); const { error } = await supabase().from('financeiro').update({ situacao: 'pago' }).in('id', ids); setBusy(false)
+    if (error) return toast('Erro: ' + error.message, 'erro'); onFechar()
+  }
+  async function salvarValor() {
+    const v = parseFloat(valor.replace(/\./g, '').replace(',', '.'))
+    if (isNaN(v) || v <= 0) return toast('Valor inválido', 'erro')
+    setBusy(true); const { error } = await supabase().from('financeiro').update({ valor: v }).eq('id', ids[0]); setBusy(false)
+    if (error) return toast('Erro: ' + error.message, 'erro'); onFechar()
+  }
+  return (
+    <div className="dialog-pop card fixed bottom-4 left-1/2 z-40 w-[min(94vw,32rem)] -translate-x-1/2 space-y-3 p-4">
+      <p className="text-sm">
+        <b>{itens.length === 1 ? `Receita de ${brl(total)} lançada` : `${itens.length} receitas lançadas (${brl(total)})`}</b> como <b>A receber</b>
+        <span className="text-slate-500"> · {itens.length === 1 ? itens[0].lead.nome_loja : 'no Financeiro'}</span>
+      </p>
+      {editando ? (
+        <div className="flex gap-2">
+          <input className="inp" autoFocus inputMode="decimal" placeholder="Novo valor (ex.: 1500,00)" value={valor} onChange={e => setValor(e.target.value)} />
+          <button className="btn-p" disabled={busy} onClick={salvarValor}>Salvar</button>
+          <button className="btn" onClick={() => setEditando(false)}>Cancelar</button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <button className="btn-p" disabled={busy} onClick={recebido}>Marcar recebido</button>
+          {itens.length === 1 && <button className="btn" disabled={busy} onClick={() => { setValor(String(itens[0].valor).replace('.', ',')); setEditando(true) }}>Editar valor</button>}
+          <button className="btn" disabled={busy} onClick={desfazer}>Desfazer</button>
+          <button className="btn" onClick={onFechar}>OK</button>
+        </div>)}
+      {aviso}
+    </div>
+  )
+}
+
+>>>>>>> 4aa413e (tema corrigido)
 function VendaDialog({ lead, resto, onFechar }: { lead: Lead; resto: number; onFechar: () => void }) {
   const { toast, aviso } = useToast()
   const [valor, setValor] = useState(''), [situacao, setSituacao] = useState<'pago' | 'pendente'>('pago')

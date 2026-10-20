@@ -1,6 +1,7 @@
 'use client'
 import PageHeader from './PageHeader'
 import ConfirmDialog from './ConfirmDialog'
+import PrecosSolucoes from './PrecosSolucoes'
 import { useToast } from './Toast'
 import Link from 'next/link'
 import { Clock, Download, PiggyBank, Repeat, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
@@ -104,6 +105,7 @@ export default function Financeiro() {
         <button className="btn-w" onClick={exportar} disabled={!doMes.length}><Download size={16} />CSV</button>
         <input type="month" aria-label="Mês" className="rounded-xl bg-white/95 px-3 py-2 text-sm font-medium text-[#1e293b] focus:outline-none" value={mes} onChange={e => setMes(e.target.value)} />
       </PageHeader>
+      <PrecosSolucoes />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         {kpis.map(([n, v, cor], i) => { const I = icones[i], dest = i === 2; return (
           <div key={n} className={`card card-hover p-4 ${dest ? '!border-0 bg-indigo-600 text-white' : ''}`}>

@@ -7,6 +7,7 @@ import { chavesDoLead, construirLeads, detectarMapeamento } from '../lib/importa
 import { chaveBusca } from '../lib/cota'
 import { whatsappNumber } from '../lib/message-template'
 import { distanceKm } from '../lib/geo'
+import { lerPrecos, totalDaVenda } from '../lib/precos'
 
 const L = (o: Partial<Lancamento>): Lancamento => ({ id: Math.random().toString(), tipo: 'receita', descricao: 'x', valor: 100, data: '2026-10-10', ...o })
 
@@ -95,4 +96,12 @@ test('WhatsApp e distância', () => {
   assert.equal(whatsappNumber('123'), null)
   assert.ok(Math.abs(distanceKm(-19.9167, -43.9345, -19.9167, -43.9345)) < 1e-9)
   assert.ok(distanceKm(-19.9167, -43.9345, -23.5505, -46.6333) > 400 && distanceKm(-19.9167, -43.9345, -23.5505, -46.6333) < 600)
+})
+
+test('venda automática: soma o preço das soluções do lead e ignora as sem preço', () => {
+  const p = lerPrecos({ landing_page: 800, site_institucional: '1500', agendamento_online: 0, comandas: 'abc' })
+  assert.deepEqual(p, { landing_page: 800, site_institucional: 1500 })
+  assert.equal(totalDaVenda({ solucoes: ['landing_page', 'site_institucional', 'comandas'] }, p), 2300)
+  assert.equal(totalDaVenda({ solucoes: ['comandas'] }, p), 0)   // sem preço configurado: o painel pergunta o valor
+  assert.equal(totalDaVenda({ solucoes: null }, p), 0)
 })
