@@ -1,0 +1,339 @@
+diff --git a/.env.example b/.env.example
+index 5194b6d..4f5eba3 100644
+--- a/.env.example
++++ b/.env.example
+@@ -1,4 +1,13 @@
+ NEXT_PUBLIC_SUPABASE_URL=
+ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
++
++# Só no servidor (Vercel → Settings → Environment Variables). Nunca no navegador.
++# Supabase → Project Settings → API → service_role (secret)
++SUPABASE_SERVICE_ROLE_KEY=
++
++# Segredo do cron automático (48h sem resposta). Gere com: openssl rand -hex 32
++# Na Vercel, o Cron envia Authorization: Bearer <CRON_SECRET>
++CRON_SECRET=
++
+ OPENWEBNINJA_API_KEY=
+ GOOGLE_MAPS_API_KEY=
+diff --git a/app/api/cron/expirar-contatos/route.ts b/app/api/cron/expirar-contatos/route.ts
+new file mode 100644
+index 0000000..ddb245f
+--- /dev/null
++++ b/app/api/cron/expirar-contatos/route.ts
+@@ -0,0 +1,53 @@
++import { NextRequest, NextResponse } from 'next/server'
++import { supabaseAdmin } from '@/lib/supabase/admin'
++import { expirarContatosSemRespostaCom, HORAS_SEM_RESPOSTA } from '@/lib/expirar-contatos'
++
++export const runtime = 'nodejs'
++export const dynamic = 'force-dynamic'
++
++/**
++ * Cron automático: leads em "Contato realizado" há +48h → "Sem interesse" / "Não respondeu".
++ *
++ * Protegido por CRON_SECRET (header Authorization: Bearer … ou ?secret=…).
++ * Vercel Cron envia Authorization: Bearer <CRON_SECRET> quando configurado.
++ *
++ * Manual: curl -H "Authorization: Bearer $CRON_SECRET" https://seu-app.vercel.app/api/cron/expirar-contatos
++ */
++function autorizado(req: NextRequest): boolean {
++  const secret = process.env.CRON_SECRET
++  if (!secret) return false
++  const auth = req.headers.get('authorization') || ''
++  if (auth === `Bearer ${secret}`) return true
++  // Fallback para teste manual com ?secret=
++  if (req.nextUrl.searchParams.get('secret') === secret) return true
++  return false
++}
++
++async function rodar(req: NextRequest) {
++  if (!autorizado(req)) {
++    return NextResponse.json({ ok: false, erro: 'Não autorizado' }, { status: 401 })
++  }
++  try {
++    const resultado = await expirarContatosSemRespostaCom(supabaseAdmin())
++    if (resultado.erro) {
++      return NextResponse.json({ ok: false, ...resultado, horas: HORAS_SEM_RESPOSTA }, { status: 500 })
++    }
++    return NextResponse.json({
++      ok: true,
++      movidos: resultado.movidos,
++      horas: HORAS_SEM_RESPOSTA,
++      em: new Date().toISOString(),
++    })
++  } catch (e) {
++    const msg = e instanceof Error ? e.message : String(e)
++    return NextResponse.json({ ok: false, erro: msg }, { status: 500 })
++  }
++}
++
++export async function GET(req: NextRequest) {
++  return rodar(req)
++}
++
++export async function POST(req: NextRequest) {
++  return rodar(req)
++}
+diff --git a/components/Hoje.tsx b/components/Hoje.tsx
+index 0c9d1f0..b57a90a 100644
+--- a/components/Hoje.tsx
++++ b/components/Hoje.tsx
+@@ -7,6 +7,7 @@ import { ChipRetorno, dataBr } from './LeadCard'
+ import { useToast } from './Toast'
+ import { supabase } from '@/lib/supabase/client'
+ import { todosLeads } from '@/lib/leads-api'
++import { expirarContatosSemResposta } from '@/lib/leads-acoes'
+ import { ativo, dataHoje, situacaoFollowUp } from '@/lib/metricas'
+ import { STATUS, STATUS_COR, naoAbordado, type Lead } from '@/lib/types'
+ import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
+@@ -19,6 +20,8 @@ export default function Hoje() {
+   const [leads, setLeads] = useState<Lead[]>([]), [loading, setLoading] = useState(true)
+   const { toast, aviso } = useToast(), usuario = useUsuario()
+   const carregar = useCallback(async () => {
++    const exp = await expirarContatosSemResposta()
++    if (exp.movidos > 0) toast(`${exp.movidos} lead${exp.movidos > 1 ? 's' : ''} sem resposta há +48h → Sem interesse`, 'ok')
+     const r = await todosLeads()
+     if (r.error) toast('Erro ao carregar leads: ' + r.error, 'erro')
+     setLeads(r.data); setLoading(false)
+diff --git a/components/Painel.tsx b/components/Painel.tsx
+index a4b25a4..06af31c 100644
+--- a/components/Painel.tsx
++++ b/components/Painel.tsx
+@@ -18,7 +18,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
+ import { useSearchParams } from 'next/navigation'
+ import { supabase } from '@/lib/supabase/client'
+ import { todosLeads } from '@/lib/leads-api'
+-import { atualizarStatus } from '@/lib/leads-acoes'
++import { atualizarStatus, expirarContatosSemResposta } from '@/lib/leads-acoes'
+ import { baixar } from '@/lib/exportar'
+ import { leadsParaCsv } from '@/lib/leads-csv'
+ import { chavesDoLead } from '@/lib/importar'
+@@ -50,6 +50,8 @@ export default function Painel() {
+   function trocarVista(v: 'cards' | 'tabela') { setVista(v); try { localStorage.setItem('vista-leads', v) } catch {} }
+ 
+   const carregar = useCallback(async () => {
++    const exp = await expirarContatosSemResposta()
++    if (exp.movidos > 0) toast(`${exp.movidos} lead${exp.movidos > 1 ? 's' : ''} sem resposta há +48h → Sem interesse`, 'ok')
+     const r = await todosLeads()
+     if (r.error) toast('Erro ao carregar leads: ' + r.error, 'erro')
+     setLeads(r.data); setLoading(false)
+diff --git a/components/Pipeline.tsx b/components/Pipeline.tsx
+index 778b0af..86d3690 100644
+--- a/components/Pipeline.tsx
++++ b/components/Pipeline.tsx
+@@ -8,7 +8,7 @@ import { useVenda } from './VendaDialog'
+ import { ChipRetorno } from './LeadCard'
+ import { useToast } from './Toast'
+ import { todosLeads } from '@/lib/leads-api'
+-import { atualizarStatus } from '@/lib/leads-acoes'
++import { atualizarStatus, expirarContatosSemResposta } from '@/lib/leads-acoes'
+ import { SEGMENTOS } from '@/lib/segmentos'
+ import { FUNIL, STATUS, STATUS_PONTO, type Lead, type Status } from '@/lib/types'
+ import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
+@@ -25,6 +25,9 @@ export default function Pipeline() {
+   const { toast, aviso } = useToast(), usuario = useUsuario(), { pedirVenda, vendaDialog } = useVenda()
+ 
+   const carregar = useCallback(async () => {
++    // Antes de listar: leads em "Contato realizado" há +48h → Sem interesse ("Não respondeu")
++    const exp = await expirarContatosSemResposta()
++    if (exp.movidos > 0) toast(`${exp.movidos} lead${exp.movidos > 1 ? 's' : ''} sem resposta há +48h → Sem interesse`, 'ok')
+     const r = await todosLeads()
+     if (r.error) toast('Erro ao carregar leads: ' + r.error, 'erro')
+     setLeads(r.data); setLoading(false)
+@@ -53,27 +56,46 @@ export default function Pipeline() {
+   }
+ 
+   return (
+-    <div className="space-y-6">
++    /* Altura fixa na viewport: cabeçalho + filtros ficam no topo e o board
++       ocupa o resto, com scrollbar horizontal sempre visível — sem precisar
++       rolar a página inteira para ver/arrastar entre as colunas. */
++    <div className="flex h-[calc(100dvh-8.5rem)] flex-col gap-3 md:h-full md:gap-4">
+       {vendaDialog}
+-      <PageHeader titulo="Pipeline" sub="Arraste os cards entre as etapas (no celular, use “Mover para”)." icone={<Kanban size={24} />} />
+-      <div className="card grid gap-3 p-4 sm:grid-cols-2">
++      <div className="shrink-0">
++        <PageHeader titulo="Pipeline" sub="Arraste os cards entre as etapas (no celular, use “Mover para”)." icone={<Kanban size={24} />} />
++      </div>
++      <div className="card grid shrink-0 gap-3 p-4 sm:grid-cols-2">
+         <input className="inp" placeholder="Buscar por loja ou cidade" value={busca} onChange={e => setBusca(e.target.value)} aria-label="Buscar" />
+         <select className="inp" value={fSeg} onChange={e => setFSeg(e.target.value)} aria-label="Segmento"><option value="">Todos os segmentos</option>{Object.entries(SEGMENTOS).map(([k, v]) => <option key={k} value={k}>{v.nome}</option>)}</select>
+       </div>
+-      {loading ? <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">{FUNIL.map(s => <div key={s} className="skeleton h-64" />)}</div> : (
+-        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0">
++      {loading ? (
++        <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
++          {FUNIL.map(s => <div key={s} className="skeleton h-full min-h-48" />)}
++        </div>
++      ) : (
++        <div
++          className="-mx-4 flex min-h-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 md:mx-0 md:px-0"
++          onDragOver={e => {
++            /* Auto-scroll horizontal enquanto arrasta perto das bordas */
++            const el = e.currentTarget
++            const rect = el.getBoundingClientRect()
++            const edge = 64
++            if (e.clientX - rect.left < edge) el.scrollLeft -= 18
++            else if (rect.right - e.clientX < edge) el.scrollLeft += 18
++          }}
++        >
+           {FUNIL.map(st => {
+             const itens = filtrados.filter(l => l.status === st), vis = mais.has(st) ? itens : itens.slice(0, POR_COLUNA)
+             return (
+               <section key={st} aria-label={STATUS[st]}
+                 onDragOver={e => { e.preventDefault(); setSobre(st) }} onDragLeave={() => setSobre(s => (s === st ? null : s))}
+                 onDrop={e => { e.preventDefault(); setSobre(null); const l = leads.find(x => x.id === arrastando); setArrastando(null); if (l) pedirMover(l, st) }}
+-                className={`card flex w-72 shrink-0 flex-col gap-3 p-3 transition-shadow ${sobre === st ? 'ring-2 ring-indigo-500' : ''}`}>
+-                <header className="flex items-center justify-between px-1">
++                className={`card flex h-full w-72 shrink-0 flex-col gap-3 p-3 transition-shadow ${sobre === st ? 'ring-2 ring-indigo-500' : ''}`}>
++                <header className="flex shrink-0 items-center justify-between px-1">
+                   <span className="flex items-center gap-2 text-sm font-semibold"><span className={`h-2 w-2 rounded-full ${STATUS_PONTO[st]}`} />{STATUS[st]}</span>
+                   <span className="flex items-center gap-1.5 text-xs text-slate-500"><b className="text-sm text-slate-700">{itens.length}</b>{filtrados.length > 0 && <span>· {Math.round((itens.length / filtrados.length) * 100)}%</span>}</span>
+                 </header>
+-                <div className="flex max-h-[65vh] flex-col gap-2 overflow-y-auto">
++                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+                   {vis.map(l => (
+                     <article key={l.id} draggable onDragStart={() => setArrastando(l.id)} onDragEnd={() => { setArrastando(null); setSobre(null) }}
+                       className={`cursor-grab space-y-2 rounded-lg border border-slate-200 bg-white p-3 text-sm transition-colors hover:border-indigo-300 active:cursor-grabbing ${arrastando === l.id ? 'opacity-40' : ''}`}>
+diff --git a/components/Shell.tsx b/components/Shell.tsx
+index ad2073c..facfdb9 100644
+--- a/components/Shell.tsx
++++ b/components/Shell.tsx
+@@ -82,7 +82,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
+         <button onClick={alternarMenu} aria-label={compacto ? 'Expandir menu' : 'Recolher menu'} title={compacto ? 'Expandir menu' : 'Recolher menu'}
+           className="absolute -right-3 top-6 z-10 hidden h-6 w-6 place-items-center rounded-full border border-nav-line-strong bg-nav-pill text-nav-ink2 shadow-md transition hover:bg-indigo-600 hover:text-white md:grid">{compacto ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}</button>
+       </div>
+-      <main className="min-w-0 flex-1 p-4 pb-24 md:p-8"><div className="mx-auto w-full max-w-[1400px] space-y-6">{children}</div></main>
++      <main className={`min-w-0 flex-1 p-4 pb-24 md:p-8 ${path === '/pipeline' ? 'overflow-hidden md:h-screen md:overflow-hidden' : ''}`}>
++        <div className={`mx-auto w-full max-w-[1400px] ${path === '/pipeline' ? 'h-full' : 'space-y-6'}`}>{children}</div>
++      </main>
+       <nav aria-label="Navegação principal" className={`fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-nav-line bg-nav-blur pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden`}>
+         {ABAS.map(([href, label, Icon]) => (
+           <Link key={href} href={href} onClick={() => setOpen(false)} className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${ativa(path, href) ? 'text-nav-accent-ink' : 'text-nav-ink3'}`}><Icon size={20} />{label}</Link>))}
+diff --git a/lib/expirar-contatos.ts b/lib/expirar-contatos.ts
+new file mode 100644
+index 0000000..ba1f8c5
+--- /dev/null
++++ b/lib/expirar-contatos.ts
+@@ -0,0 +1,44 @@
++import type { SupabaseClient } from '@supabase/supabase-js'
++
++/** Após este tempo em "Contato realizado" sem avanço → Sem interesse. */
++export const HORAS_SEM_RESPOSTA = 48
++export const MOTIVO_NAO_RESPONDEU = 'Não respondeu'
++
++type Resultado = { movidos: number; erro: string | null }
++
++/**
++ * Move para "Sem interesse" (motivo "Não respondeu") os leads em
++ * "Contato realizado" há mais de HORAS_SEM_RESPOSTA horas.
++ * Critério: status = contato_realizado e (ultimo_contato ?? created_at) < agora − 48h.
++ *
++ * Aceita qualquer cliente Supabase (browser com RLS ou admin com service_role).
++ */
++export async function expirarContatosSemRespostaCom(db: SupabaseClient): Promise<Resultado> {
++  const limite = new Date(Date.now() - HORAS_SEM_RESPOSTA * 60 * 60 * 1000).toISOString()
++  const { data, error } = await db
++    .from('leads')
++    .select('id, ultimo_contato, created_at')
++    .eq('status', 'contato_realizado')
++  if (error) return { movidos: 0, erro: error.message }
++
++  const ids = (data || [])
++    .filter(l => (l.ultimo_contato || l.created_at) < limite)
++    .map(l => l.id as string)
++  if (ids.length === 0) return { movidos: 0, erro: null }
++
++  let movidos = 0
++  for (let i = 0; i < ids.length; i += 100) {
++    const lote = ids.slice(i, i + 100)
++    const { error: errUp } = await db
++      .from('leads')
++      .update({
++        status: 'sem_interesse',
++        motivo_perda: MOTIVO_NAO_RESPONDEU,
++        proximo_contato: null,
++      })
++      .in('id', lote)
++    if (errUp) return { movidos, erro: errUp.message }
++    movidos += lote.length
++  }
++  return { movidos, erro: null }
++}
+diff --git a/lib/leads-acoes.ts b/lib/leads-acoes.ts
+index a4f7a12..7abcb56 100644
+--- a/lib/leads-acoes.ts
++++ b/lib/leads-acoes.ts
+@@ -1,10 +1,23 @@
+ import { supabase } from './supabase/client'
+ import type { Status } from './types'
++import { expirarContatosSemRespostaCom, HORAS_SEM_RESPOSTA, MOTIVO_NAO_RESPONDEU } from './expirar-contatos'
++
++export { HORAS_SEM_RESPOSTA, MOTIVO_NAO_RESPONDEU }
+ 
+ // Muda o status de um ou vários leads. "Sem interesse" guarda o motivo; fechado/perdido limpa o follow-up.
++// Ao entrar em "Contato realizado", marca ultimo_contato (relógio das 48h).
+ export async function atualizarStatus(ids: string[], status: Status, motivo?: string | null) {
+   const campos: Record<string, unknown> = { status, motivo_perda: status === 'sem_interesse' ? (motivo ?? null) : null }
+   if (status === 'convertido' || status === 'sem_interesse') campos.proximo_contato = null
++  if (status === 'contato_realizado') campos.ultimo_contato = new Date().toISOString()
+   const { error } = await supabase().from('leads').update(campos).in('id', ids)
+   return error?.message ?? null
+ }
++
++/**
++ * Versão do navegador (respeita RLS — só leads do usuário logado).
++ * O cron do servidor usa a mesma lógica com service_role em /api/cron/expirar-contatos.
++ */
++export async function expirarContatosSemResposta() {
++  return expirarContatosSemRespostaCom(supabase())
++}
+diff --git a/lib/supabase/admin.ts b/lib/supabase/admin.ts
+new file mode 100644
+index 0000000..a354e54
+--- /dev/null
++++ b/lib/supabase/admin.ts
+@@ -0,0 +1,17 @@
++import { createClient, type SupabaseClient } from '@supabase/supabase-js'
++
++/**
++ * Cliente com service_role — só no servidor (API/cron).
++ * Ignora RLS e enxerga leads de todos os usuários.
++ * NUNCA importe este módulo em componentes 'use client'.
++ */
++export function supabaseAdmin(): SupabaseClient {
++  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
++  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
++  if (!url || !key) {
++    throw new Error('Faltam NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY no ambiente do servidor')
++  }
++  return createClient(url, key, {
++    auth: { persistSession: false, autoRefreshToken: false },
++  })
++}
+diff --git a/middleware.ts b/middleware.ts
+index fafcf22..f35d386 100644
+--- a/middleware.ts
++++ b/middleware.ts
+@@ -19,4 +19,5 @@ export async function middleware(req: NextRequest) {
+   if (user && isLogin) return NextResponse.redirect(new URL('/', req.url))
+   return res
+ }
+-export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'] }
++// /api/cron/* fica de fora: o Vercel Cron chama sem cookie de login (usa CRON_SECRET).
++export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|api/cron).*)'] }
+diff --git a/vercel.json b/vercel.json
+new file mode 100644
+index 0000000..4c2b169
+--- /dev/null
++++ b/vercel.json
+@@ -0,0 +1,8 @@
++{
++  "crons": [
++    {
++      "path": "/api/cron/expirar-contatos",
++      "schedule": "0 * * * *"
++    }
++  ]
++}

@@ -19,4 +19,5 @@ export async function middleware(req: NextRequest) {
   if (user && isLogin) return NextResponse.redirect(new URL('/', req.url))
   return res
 }
-export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'] }
+// /api/cron/* fica de fora: o Vercel Cron chama sem cookie de login (usa CRON_SECRET).
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|api/cron).*)'] }
