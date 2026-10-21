@@ -11,7 +11,7 @@ export const CATEGORIAS_DESPESA = ['Hospedagem', 'Domínio', 'Ferramentas', 'An�
 export const contarPorStatus = (leads: Pick<Lead, 'status'>[]) =>
   Object.fromEntries(FUNIL.map(s => [s, leads.filter(l => l.status === s).length])) as Record<Status, number>
 
-// Conversão = convertidos ÷ leads que já foram abordados (tudo que saiu de "novo" e "entrar em contato").
+// Conversão = convertidos ÷ leads que já foram abordados (tudo que saiu de "Novo").
 export function taxaConversao(leads: Pick<Lead, 'status'>[]) {
   const abordados = leads.filter(l => !naoAbordado(l.status)).length
   const fechados = leads.filter(l => l.status === 'convertido').length

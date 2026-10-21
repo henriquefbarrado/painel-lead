@@ -13,7 +13,7 @@ import { supabase } from '@/lib/supabase/client'
 import { atualizarStatus } from '@/lib/leads-acoes'
 import { TIPOS_CONTATO, type Contato, type TipoContato } from '@/lib/contatos'
 import { SEGMENTOS, SOLUCOES } from '@/lib/segmentos'
-import { FUNIL, STATUS, STATUS_COR, naoAbordado, type Lead, type LeadInput, type Status } from '@/lib/types'
+import { FUNIL, STATUS, STATUS_COR, naoAbordado, normalizarStatus, type Lead, type LeadInput, type Status } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
 import { mensagemDoLead } from '@/lib/templates'
 import { useUsuario } from '@/lib/useUsuario'
@@ -39,9 +39,11 @@ export default function LeadDetalhe({ id }: { id: string }) {
       supabase().from('contatos').select('*').eq('lead_id', id).order('contatado_em', { ascending: false }),
       supabase().from('financeiro').select('id,descricao,valor,situacao').eq('lead_id', id).eq('tipo', 'receita'),
     ])
-    setLead((l.data as Lead) ?? null); setContatos((c.data as Contato[]) || [])
+    const leadBruto = (l.data as Lead | null) ?? null
+    const leadCarregado = leadBruto ? { ...leadBruto, status: normalizarStatus(leadBruto.status) } : null
+    setLead(leadCarregado); setContatos((c.data as Contato[]) || [])
     setReceitas(((f.data || []) as { id: string; descricao: string; valor: number; situacao?: string }[]).map(r => ({ ...r, valor: Number(r.valor) })))
-    if (l.data) { setProximo((l.data as Lead).proximo_contato ?? ''); setAcao((l.data as Lead).proxima_acao ?? '') }
+    if (leadCarregado) { setProximo(leadCarregado.proximo_contato ?? ''); setAcao(leadCarregado.proxima_acao ?? '') }
     setLoading(false)
   }, [id])
   useEffect(() => { carregar() }, [carregar])

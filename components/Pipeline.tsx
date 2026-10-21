@@ -60,7 +60,7 @@ export default function Pipeline() {
         <input className="inp" placeholder="Buscar por loja ou cidade" value={busca} onChange={e => setBusca(e.target.value)} aria-label="Buscar" />
         <select className="inp" value={fSeg} onChange={e => setFSeg(e.target.value)} aria-label="Segmento"><option value="">Todos os segmentos</option>{Object.entries(SEGMENTOS).map(([k, v]) => <option key={k} value={k}>{v.nome}</option>)}</select>
       </div>
-      {loading ? <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">{FUNIL.map(s => <div key={s} className="skeleton h-64" />)}</div> : (
+      {loading ? <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">{FUNIL.map(s => <div key={s} className="skeleton h-64" />)}</div> : (
         <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0">
           {FUNIL.map(st => {
             const itens = filtrados.filter(l => l.status === st), vis = mais.has(st) ? itens : itens.slice(0, POR_COLUNA)

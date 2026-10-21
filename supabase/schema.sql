@@ -1,4 +1,4 @@
-create type lead_status as enum ('novo','entrar_em_contato','contato_realizado','interessado','sem_interesse','negociacao','convertido');
+create type lead_status as enum ('novo','contato_realizado','interessado','sem_interesse','negociacao','convertido');
 create table leads (
   id uuid primary key default gen_random_uuid(),
   nome_loja text not null, responsavel text, whatsapp text, endereco text,

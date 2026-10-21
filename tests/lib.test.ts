@@ -6,6 +6,7 @@ import { paraCsv } from '../lib/exportar'
 import { chavesDoLead, construirLeads, detectarMapeamento } from '../lib/importar'
 import { chaveBusca } from '../lib/cota'
 import { temMensagem, whatsappNumber } from '../lib/message-template'
+import { FUNIL, normalizarStatus } from '../lib/types'
 import { distanceKm } from '../lib/geo'
 import { lerPrecos, totalDaVenda } from '../lib/precos'
 
@@ -17,9 +18,12 @@ test('conversão = fechados ÷ abordados (novos não contam)', () => {
   assert.equal(taxaConversao([]), 0)
 })
 
-test('conversão: "entrar em contato" ainda não é abordado', () => {
-  const ls = [{ status: 'novo' }, { status: 'entrar_em_contato' }, { status: 'contato_realizado' }, { status: 'convertido' }] as const
-  assert.equal(taxaConversao([...ls]), 1 / 2)
+test('a etapa antiga Entrar em contato é tratada como Novo', () => {
+  assert.equal(normalizarStatus('entrar_em_contato'), 'novo')
+  assert.equal(normalizarStatus('novo'), 'novo')
+  assert.equal(FUNIL.includes('entrar_em_contato' as never), false)
+  const ls = [{ status: normalizarStatus('novo') }, { status: normalizarStatus('entrar_em_contato') }, { status: normalizarStatus('contato_realizado') }, { status: normalizarStatus('convertido') }]
+  assert.equal(taxaConversao(ls), 1 / 2)
 })
 
 test('financeiro: pendente não entra no lucro, só em "a receber"', () => {
@@ -67,13 +71,12 @@ test('mensagem de primeiro contato é fixa e ignora templates antigos', () => {
   assert.match(mensagemDoLead(lead, 'Henrique', t), /Olá, tudo bem\? Aqui é o Henrique/)
   assert.match(mensagemDoLead(lead, 'Henrique', t), /Vi a Salão/)
   assert.doesNotMatch(mensagemDoLead(lead, 'Henrique', t), /Texto personalizado/)
-  assert.equal(mensagemDoLead({ ...lead, status: 'entrar_em_contato' }, 'Henrique', []), mensagemDoLead(lead, 'Henrique', []))
+  assert.equal(mensagemDoLead({ ...lead, status: normalizarStatus('entrar_em_contato') }, 'Henrique', []), mensagemDoLead(lead, 'Henrique', []))
 })
 
 test('as demais etapas são etiquetas e não geram mensagens automáticas', () => {
   const t: Template[] = [{ id: '1', nome: 'x', segmento: null, status: 'convertido' as never, texto: 'oi' }]
   assert.equal(temMensagem('novo'), true)
-  assert.equal(temMensagem('entrar_em_contato'), true)
   for (const status of ['contato_realizado', 'interessado', 'negociacao', 'sem_interesse', 'convertido'] as const) {
     assert.equal(temMensagem(status), false)
     assert.equal(mensagemDoLead({ nome_loja: 'A', status, segmento: null, responsavel: null, cidade: null }, 'H', t), '')

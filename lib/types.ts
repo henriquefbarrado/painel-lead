@@ -1,8 +1,14 @@
 export const STATUS = {
-  novo: 'Novo', entrar_em_contato: 'Entrar em contato', contato_realizado: 'Contato realizado', interessado: 'Interessado',
+  novo: 'Novo', contato_realizado: 'Contato realizado', interessado: 'Interessado',
   sem_interesse: 'Sem interesse', negociacao: 'Negociação', convertido: 'Convertido',
 } as const
 export type Status = keyof typeof STATUS
+
+// Compatibilidade com registros antigos: a etapa removida vira Novo ao carregar.
+export function normalizarStatus(status: unknown): Status {
+  if (status === 'entrar_em_contato' || typeof status !== 'string' || !(status in STATUS)) return 'novo'
+  return status as Status
+}
 export type Lead = {
   id: string; nome_loja: string; responsavel: string | null; whatsapp: string | null
   endereco: string | null; cidade: string | null; estado: string | null; cep: string | null
@@ -14,19 +20,20 @@ export type Lead = {
 }
 export type LeadInput = Omit<Lead, 'id' | 'created_at'>
 export const STATUS_COR: Record<Status, string> = {
-  novo: 'bg-sky-100 text-sky-700', entrar_em_contato: 'bg-indigo-100 text-indigo-700', contato_realizado: 'bg-violet-100 text-violet-700',
+  novo: 'bg-sky-100 text-sky-700', contato_realizado: 'bg-violet-100 text-violet-700',
   interessado: 'bg-amber-100 text-amber-700', sem_interesse: 'bg-slate-200 text-slate-600',
   negociacao: 'bg-orange-100 text-orange-700', convertido: 'bg-emerald-100 text-emerald-700',
 }
 
 export const STATUS_PONTO: Record<Status, string> = {
-  novo: 'bg-sky-400', entrar_em_contato: 'bg-indigo-400', contato_realizado: 'bg-violet-400', interessado: 'bg-amber-400',
+  novo: 'bg-sky-400', contato_realizado: 'bg-violet-400', interessado: 'bg-amber-400',
   negociacao: 'bg-orange-400', convertido: 'bg-emerald-400', sem_interesse: 'bg-slate-400',
 }
 
-// Ordem do funil (a mesma do Kanban). 'sem_interesse' é a saída de qualquer etapa.
-export const FUNIL: Status[] = ['novo', 'entrar_em_contato', 'contato_realizado', 'interessado', 'negociacao', 'convertido', 'sem_interesse']
+// Depois da primeira mensagem, mova o lead diretamente para Contato realizado.
+// 'sem_interesse' é a saída de qualquer etapa.
+export const FUNIL: Status[] = ['novo', 'contato_realizado', 'interessado', 'negociacao', 'convertido', 'sem_interesse']
 export const MOTIVOS_PERDA = ['Já tem site', 'Sem orçamento', 'Não respondeu', 'Não tem interesse em site', 'Escolheu outro fornecedor', 'Fechou o negócio', 'Outro']
 
-// Etapas em que o lead ainda NÃO recebeu a primeira mensagem ("Entrar em contato" é a fila de quem vai ser chamado).
-export const naoAbordado = (s: Status) => s === 'novo' || s === 'entrar_em_contato'
+// Única etapa em que o lead ainda não recebeu a primeira mensagem.
+export const naoAbordado = (s: Status) => s === 'novo'

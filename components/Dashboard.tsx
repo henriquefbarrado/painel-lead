@@ -31,7 +31,7 @@ function Kpi({ titulo, valor, rodape, children }: { titulo: string; valor: strin
     </div>
   )
 }
-const COR_BARRA: Record<string, string> = { novo: 'bg-sky-500', entrar_em_contato: 'bg-indigo-500', contato_realizado: 'bg-violet-500', interessado: 'bg-amber-500', negociacao: 'bg-orange-500', convertido: 'bg-emerald-500', sem_interesse: 'bg-slate-400' }
+const COR_BARRA: Record<string, string> = { novo: 'bg-sky-500', contato_realizado: 'bg-violet-500', interessado: 'bg-amber-500', negociacao: 'bg-orange-500', convertido: 'bg-emerald-500', sem_interesse: 'bg-slate-400' }
 
 export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]), [fin, setFin] = useState<Lancamento[]>([]), [contatos, setContatos] = useState<{ contatado_em: string }[]>([])

@@ -3,13 +3,13 @@
 # 🚀 Painel de Leads — Pacote de Melhorias
 
 **De lista de contatos para um CRM de prospecção completo.**
-Pipeline, follow-up, mensagens por segmento, cota da busca e financeiro ligado aos leads.
+Pipeline simplificado, follow-up, mensagem padrão de primeiro contato, cota da busca e financeiro ligado aos leads.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ECF8E?logo=supabase&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)
-![Testes](https://img.shields.io/badge/testes-12%20passando-brightgreen)
+![Testes](https://img.shields.io/badge/testes-14%20passando-brightgreen)
 
 </div>
 

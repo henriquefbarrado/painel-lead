@@ -1,68 +1,55 @@
 # Status dos leads: o que significa cada um
 
-Cada lead tem um **status** (a "tag" colorida no card). Ele diz em que ponto da conversa a loja está e define **qual mensagem aparece** no card.
+Cada lead tem um **status** (a etiqueta colorida do card). O status mostra em que ponto da prospecção a loja está. A mensagem padrão de primeiro contato fica disponível apenas em **Novo**; as demais etapas funcionam como etiquetas do funil.
 
 ## Resumo
 
-| Status | O que significa | Quando marcar | Mensagem no card? |
+| Status | O que significa | Quando marcar | Mensagem padrão? |
 |---|---|---|---|
-| **Novo** | Lead cadastrado, ninguém falou com ele ainda | Ao cadastrar ou importar a loja | Sim: primeiro contato |
-| **Entrar em contato** | Lead separado para ser chamado: está na fila, mas a primeira mensagem ainda não foi enviada | Quando você escolher a loja para abordar (ex.: a lista do dia) | Sim: primeiro contato (o mesmo texto do Novo) |
-| **Contato realizado** | Você já mandou a primeira mensagem, mas ainda não houve resposta | Logo depois de enviar a mensagem de "Novo" | Sim: acompanhamento (cobrar uma resposta) |
-| **Interessado** | A pessoa respondeu e demonstrou interesse | Quando ela pedir mais informações ou disser que quer ver | Sim: apresentar valores e marcar conversa |
-| **Negociação** | Proposta e valores enviados, em fase de decisão | Depois de mandar o orçamento | Sim: perguntar se avaliou a proposta |
-| **Convertido** | Fechou negócio, virou cliente | Quando o pagamento ou o acordo for confirmado | **Não**: só a tag |
-| **Sem interesse** | Recusou, ou não é o perfil | Quando disser "não" ou pedir para parar de receber mensagem | **Não**: só a tag |
-
-## Por que dois status ficam sem mensagem
-
-- **Sem interesse:** insistir depois de uma recusa incomoda o cliente e pode levar a bloqueio e denúncia no WhatsApp. O lead fica guardado para consulta, sem texto pronto que convide a chamar de novo.
-- **Convertido:** o cliente já fechou. Não existe mensagem de venda para mandar. O atendimento dele vai por conversa normal, fora do fluxo de prospecção.
-
-Nos dois casos o card mostra só a tag e um aviso curto, sem caixa de mensagem e sem os botões **WhatsApp** e **Copiar mensagem**. **Ver detalhes**, **Editar** e **Excluir** continuam funcionando.
+| **Novo** | Lead cadastrado, primeira mensagem ainda não enviada | Ao cadastrar ou importar a loja; permanece aqui até você abordar | **Sim: primeiro contato** |
+| **Contato realizado** | A primeira mensagem já foi enviada, ainda sem resposta | Logo após enviar a mensagem do card em Novo | Não; use a conversa já iniciada para acompanhar |
+| **Interessado** | A loja respondeu e demonstrou interesse | Quando pedir mais informações ou quiser ver uma proposta | Não; registre as próximas ações no follow-up |
+| **Negociação** | Proposta e valores enviados, em fase de decisão | Depois de enviar o orçamento | Não; acompanhe a negociação |
+| **Convertido** | Fechou negócio, virou cliente | Quando pagamento ou acordo for confirmado | Não; só a etiqueta |
+| **Sem interesse** | Recusou ou não é o perfil | Quando disser que não tem interesse ou pedir para não receber contato | Não; só a etiqueta |
 
 ## Caminho normal de um lead
 
 ```
-Novo  →  Entrar em contato  →  Contato realizado  →  Interessado  →  Negociação  →  Convertido
-  \              \                    \                    \               \
-   \______________\____________________\____________________\_______________\____→  Sem interesse
+Novo → Contato realizado → Interessado → Negociação → Convertido
+  └──────────── qualquer etapa ────────────→ Sem interesse
 ```
 
-Um lead pode virar **Sem interesse** em qualquer etapa. Pode também voltar para uma etapa anterior se a pessoa mudar de ideia.
+Um lead pode virar **Sem interesse** em qualquer etapa. Também pode voltar para uma etapa anterior se a conversa mudar.
 
 ## Rotina sugerida
 
-1. Cadastre ou busque lojas: entram como **Novo**.
-2. Separe as que vai chamar agora movendo para **Entrar em contato** (etapa opcional, serve de fila).
-3. Envie a mensagem do card e mude para **Contato realizado**.
-4. Se a pessoa não responder em 2 a 3 dias, abra o card de novo e use a mensagem de acompanhamento (o texto do status já é esse).
-5. Se ela demonstrar interesse, mude para **Interessado** e use o texto de apresentação.
-6. Depois de enviar a proposta, mude para **Negociação**.
-7. Fechou? **Convertido**. Recusou? **Sem interesse**.
+1. Cadastre ou busque lojas: elas entram como **Novo**.
+2. Abra o WhatsApp pelo botão **Chamar** no card Novo e envie a mensagem padrão.
+3. Depois de enviar, arraste o lead diretamente para **Contato realizado**.
+4. Se a loja responder e demonstrar interesse, mova para **Interessado**.
+5. Depois de enviar a proposta, mova para **Negociação**.
+6. Fechou? **Convertido**. Recusou? **Sem interesse**.
 
-A cada mudança de status o texto do card troca sozinho. Atenção: se você tinha editado a mensagem à mão, ao mudar o status ela volta ao texto padrão do novo status.
+O painel não tem mais a etapa intermediária **Entrar em contato**. Registros antigos que ainda estiverem nela são tratados como **Novo** e podem ser normalizados no banco com a migração descrita abaixo.
 
-## Como alterar os textos
+## Mensagem padrão
 
-Abra `lib/message-template.ts` e edite o objeto `MESSAGES`. Os marcadores são:
+O texto do primeiro contato fica em `lib/message-template.ts`. Os marcadores aceitos são:
 
-- `{SEU_NOME}`: vira o nome de quem está logado (veja `lib/usuarios.ts`)
-- `{NOME_DA_LOJA}`: vira o nome da loja do card
+- `{SEU_NOME}`: vira o nome de quem está logado.
+- `{NOME_DA_LOJA}`: vira o nome da loja do card.
 
-Para **dar mensagem** a um status que hoje não tem (por exemplo, "Convertido"), adicione uma linha nova em `MESSAGES` com o nome do status (`convertido: '...'`). Para **tirar** a mensagem de um status, apague a linha dele.
-
-Os nomes internos dos status são: `novo`, `entrar_em_contato`, `contato_realizado`, `interessado`, `negociacao`, `sem_interesse` e `convertido`.
+Templates antigos podem permanecer guardados no banco, mas não substituem a mensagem padrão do primeiro contato.
 
 ## Banco de dados
 
-A etapa **Entrar em contato** é um valor novo do campo `status`. Rode **uma vez** o arquivo `supabase/etapa-entrar-em-contato.sql` no SQL Editor do Supabase (sozinho, sem outros comandos junto). Sem isso, mover um lead para a nova etapa dá erro.
+Se você já tinha leads na etapa **Entrar em contato**, rode uma vez `supabase/remover-etapa-entrar-em-contato.sql` no SQL Editor do Supabase. Isso altera esses registros para **Novo**. O painel também reconhece o status legado na leitura, então os leads não desaparecem mesmo antes de executar essa migração.
 
-No cálculo de conversão, "Entrar em contato" conta como lead ainda não abordado, igual ao Novo.
+Em instalações novas, `supabase/schema.sql` já não cria a opção antiga.
 
-## Novidades relacionadas ao funil
+## Recursos relacionados
 
-- **Motivo da perda:** ao mover um lead para **Sem interesse** (no card, na ficha, no Kanban ou em massa), o sistema pergunta o motivo. Os mais comuns aparecem no Início.
-- **Follow-up:** leads em andamento podem ter **próximo contato** e **próxima ação**. Quando viram **Convertido** ou **Sem interesse**, a data de retorno é limpa.
-- **Convertido automático:** lançar uma **receita vinculada a um lead** no Financeiro marca o lead como Convertido.
-- **Mensagens por segmento:** em **Mensagens** você cria textos por etapa e por segmento. Convertido e Sem interesse continuam sem mensagem, mesmo que exista template.
+- **Motivo da perda:** ao mover um lead para **Sem interesse**, o painel pergunta o motivo.
+- **Follow-up:** leads em andamento podem ter **próximo contato** e **próxima ação**.
+- **Convertido automático:** lançar uma receita vinculada a um lead no Financeiro marca o lead como Convertido.

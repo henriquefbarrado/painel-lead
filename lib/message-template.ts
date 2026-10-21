@@ -6,10 +6,8 @@ const PRIMEIRO_CONTATO =
     'Olá, tudo bem? Aqui é o {SEU_NOME}, eu crio sites e páginas para negócios da região. Vi a {NOME_DA_LOJA} e queria fazer uma pergunta rápida: vocês já têm um site ou página própria para os clientes encontrarem e entrarem em contato? Se ainda não tiver, posso te mostrar um exemplo bem simples de como ficaria, sem compromisso.'
 
 export const MESSAGES: Partial<Record<Status, string>> = {
-  // A mensagem padrão é usada apenas na fila de primeiro contato.
-  // As demais etapas do funil continuam como status/etiquetas do lead.
+  // A mensagem padrão é usada apenas em Novo. As demais etapas são status/etiquetas.
   novo: PRIMEIRO_CONTATO,
-  entrar_em_contato: PRIMEIRO_CONTATO,
 }
 
 export const temMensagem = (status: Status) => !!MESSAGES[status]

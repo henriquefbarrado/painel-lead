@@ -50,23 +50,21 @@ Feito para poucas pessoas, **cada uma com o seu login** e os seus próprios lead
 
 ## 🎯 O funil
 
-Cada lead anda por etapas, e **a mensagem do WhatsApp muda sozinha** conforme a etapa:
+O fluxo é direto: envie a mensagem padrão enquanto o lead estiver em **Novo** e, depois de enviar, mova-o para **Contato realizado**. As outras etapas organizam o andamento da negociação; não geram mensagens automáticas diferentes.
 
 ```
-🆕 Novo ➜ 📲 Entrar em contato ➜ 💬 Contato realizado ➜ 🔥 Interessado ➜ 🤝 Negociação ➜ 🎉 Convertido
-   \            \                       \                     \                 \
-    \____________\_______________________\_____________________\_________________\____➜ 🚫 Sem interesse
+Novo → Contato realizado → Interessado → Negociação → Convertido
+  └────────────── qualquer etapa ──────────────→ Sem interesse
 ```
 
-| Etapa | Significado | Mensagem? |
+| Etapa | Significado | Mensagem padrão? |
 |---|---|---|
-| 🆕 **Novo** | Cadastrado, ninguém falou com ele | ✅ primeiro contato |
-| 📲 **Entrar em contato** | Na fila de quem você vai chamar agora | ✅ primeiro contato |
-| 💬 **Contato realizado** | Primeira mensagem enviada, sem resposta | ✅ acompanhamento |
-| 🔥 **Interessado** | Respondeu e mostrou interesse | ✅ apresentar valores |
-| 🤝 **Negociação** | Proposta enviada, decidindo | ✅ perguntar da proposta |
-| 🎉 **Convertido** | Fechou! | ➖ só a tag |
-| 🚫 **Sem interesse** | Recusou ou não é o perfil | ➖ só a tag |
+| 🆕 **Novo** | Cadastrado, primeira mensagem ainda não enviada | ✅ primeiro contato |
+| 💬 **Contato realizado** | Primeira mensagem enviada | ➖ status/etiqueta |
+| 🔥 **Interessado** | Respondeu e demonstrou interesse | ➖ status/etiqueta |
+| 🤝 **Negociação** | Proposta enviada, em fase de decisão | ➖ status/etiqueta |
+| 🎉 **Convertido** | Fechou negócio | ➖ status/etiqueta |
+| 🚫 **Sem interesse** | Recusou ou não é o perfil | ➖ status/etiqueta |
 
 📖 Detalhes e rotina sugerida em [STATUS-DOS-LEADS.md](STATUS-DOS-LEADS.md).
 
@@ -75,8 +73,8 @@ Cada lead anda por etapas, e **a mensagem do WhatsApp muda sozinha** conforme a 
 ## 🧰 Funcionalidades
 
 ### 💬 Mensagens e contato
-- 📝 Texto pronto por etapa, **editável**, com botões **Copiar** e **WhatsApp** (abre o `wa.me` já preenchido)
-- 🧩 Templates por **etapa e segmento**, com variáveis `{nome_loja}` `{seu_nome}` `{responsavel}` `{cidade}`
+- 📝 Mensagem padrão de primeiro contato em **Novo**, com WhatsApp já preenchido e opção de copiar
+- 🧩 Personalização automática da mensagem padrão com o nome da loja e o nome de quem está logado
 - 🏃 **Modo envio**: uma loja por vez, mensagem pronta, “Enviei, próximo” e o status avança sozinho
 - 📒 **Histórico de contatos** e notas na ficha do lead
 
@@ -140,10 +138,9 @@ Crie um projeto em [supabase.com](https://supabase.com) e, no **SQL Editor**, ro
 5. supabase/melhorias.sql             (pode rodar de novo sem problema)
 6. supabase/por-usuario.sql           (cada usuário vê só os próprios leads)
 7. supabase/logs-busca.sql            (logs de busca, só administrador)
-8. supabase/etapa-entrar-em-contato.sql   (rode sozinho, sem outros comandos junto)
 ```
 
-> 💡 Se você já tinha o projeto rodando antes da etapa **Entrar em contato**, rode só o item 8.
+> 💡 Se você já tem registros na antiga etapa **Entrar em contato**, rode uma vez `supabase/remover-etapa-entrar-em-contato.sql` para movê-los para **Novo**.
 
 **2️⃣ Usuários**
 Em **Authentication > Users**, crie cada pessoa (marque *Auto Confirm User*). Depois desative o cadastro público em **Authentication > Providers > Email** (*Allow new users to sign up*).
