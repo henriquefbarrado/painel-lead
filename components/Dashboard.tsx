@@ -93,7 +93,7 @@ export default function Dashboard() {
   if (loading) return <div className="space-y-4" aria-busy="true"><div className="skeleton h-28" /><div className="grid gap-4 md:grid-cols-2"><div className="skeleton h-64" /><div className="skeleton h-64" /></div></div>
   return (
     <div className="space-y-6">
-      <PageHeader titulo="Início" sub="Como está sua prospecção hoje." icone={<LayoutDashboard size={24} />}>
+      <PageHeader titulo="Início" sub="Resumo da sua prospecção, contatos e resultados." icone={<LayoutDashboard size={24} />}>
         <Link href="/hoje" className="btn-p"><CalendarCheck size={16} />Hoje{devidos > 0 ? ` (${devidos})` : ''}</Link>
         <button className="btn-w" onClick={backup}><DatabaseBackup size={16} />Backup</button>
       </PageHeader>
