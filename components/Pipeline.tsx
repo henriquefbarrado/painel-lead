@@ -53,27 +53,46 @@ export default function Pipeline() {
   }
 
   return (
-    <div className="space-y-6">
+    /* Altura fixa na viewport: cabeçalho + filtros ficam no topo e o board
+       ocupa o resto, com scrollbar horizontal sempre visível — sem precisar
+       rolar a página inteira para ver/arrastar entre as colunas. */
+    <div className="flex h-[calc(100dvh-8.5rem)] flex-col gap-3 md:h-full md:gap-4">
       {vendaDialog}
-      <PageHeader titulo="Pipeline" sub="Arraste os cards entre as etapas (no celular, use “Mover para”)." icone={<Kanban size={24} />} />
-      <div className="card grid gap-3 p-4 sm:grid-cols-2">
+      <div className="shrink-0">
+        <PageHeader titulo="Pipeline" sub="Arraste os cards entre as etapas (no celular, use “Mover para”)." icone={<Kanban size={24} />} />
+      </div>
+      <div className="card grid shrink-0 gap-3 p-4 sm:grid-cols-2">
         <input className="inp" placeholder="Buscar por loja ou cidade" value={busca} onChange={e => setBusca(e.target.value)} aria-label="Buscar" />
         <select className="inp" value={fSeg} onChange={e => setFSeg(e.target.value)} aria-label="Segmento"><option value="">Todos os segmentos</option>{Object.entries(SEGMENTOS).map(([k, v]) => <option key={k} value={k}>{v.nome}</option>)}</select>
       </div>
-      {loading ? <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">{FUNIL.map(s => <div key={s} className="skeleton h-64" />)}</div> : (
-        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0">
+      {loading ? (
+        <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          {FUNIL.map(s => <div key={s} className="skeleton h-full min-h-48" />)}
+        </div>
+      ) : (
+        <div
+          className="-mx-4 flex min-h-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden px-4 pb-2 md:mx-0 md:px-0"
+          onDragOver={e => {
+            /* Auto-scroll horizontal enquanto arrasta perto das bordas */
+            const el = e.currentTarget
+            const rect = el.getBoundingClientRect()
+            const edge = 64
+            if (e.clientX - rect.left < edge) el.scrollLeft -= 18
+            else if (rect.right - e.clientX < edge) el.scrollLeft += 18
+          }}
+        >
           {FUNIL.map(st => {
             const itens = filtrados.filter(l => l.status === st), vis = mais.has(st) ? itens : itens.slice(0, POR_COLUNA)
             return (
               <section key={st} aria-label={STATUS[st]}
                 onDragOver={e => { e.preventDefault(); setSobre(st) }} onDragLeave={() => setSobre(s => (s === st ? null : s))}
                 onDrop={e => { e.preventDefault(); setSobre(null); const l = leads.find(x => x.id === arrastando); setArrastando(null); if (l) pedirMover(l, st) }}
-                className={`card flex w-72 shrink-0 flex-col gap-3 p-3 transition-shadow ${sobre === st ? 'ring-2 ring-indigo-500' : ''}`}>
-                <header className="flex items-center justify-between px-1">
+                className={`card flex h-full w-72 shrink-0 flex-col gap-3 p-3 transition-shadow ${sobre === st ? 'ring-2 ring-indigo-500' : ''}`}>
+                <header className="flex shrink-0 items-center justify-between px-1">
                   <span className="flex items-center gap-2 text-sm font-semibold"><span className={`h-2 w-2 rounded-full ${STATUS_PONTO[st]}`} />{STATUS[st]}</span>
                   <span className="flex items-center gap-1.5 text-xs text-slate-500"><b className="text-sm text-slate-700">{itens.length}</b>{filtrados.length > 0 && <span>· {Math.round((itens.length / filtrados.length) * 100)}%</span>}</span>
                 </header>
-                <div className="flex max-h-[65vh] flex-col gap-2 overflow-y-auto">
+                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
                   {vis.map(l => (
                     <article key={l.id} draggable onDragStart={() => setArrastando(l.id)} onDragEnd={() => { setArrastando(null); setSobre(null) }}
                       className={`cursor-grab space-y-2 rounded-lg border border-slate-200 bg-white p-3 text-sm transition-colors hover:border-indigo-300 active:cursor-grabbing ${arrastando === l.id ? 'opacity-40' : ''}`}>

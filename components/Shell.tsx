@@ -82,7 +82,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <button onClick={alternarMenu} aria-label={compacto ? 'Expandir menu' : 'Recolher menu'} title={compacto ? 'Expandir menu' : 'Recolher menu'}
           className="absolute -right-3 top-6 z-10 hidden h-6 w-6 place-items-center rounded-full border border-nav-line-strong bg-nav-pill text-nav-ink2 shadow-md transition hover:bg-indigo-600 hover:text-white md:grid">{compacto ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}</button>
       </div>
-      <main className="min-w-0 flex-1 p-4 pb-24 md:p-8"><div className="mx-auto w-full max-w-[1400px] space-y-6">{children}</div></main>
+      <main className={`min-w-0 flex-1 p-4 pb-24 md:p-8 ${path === '/pipeline' ? 'overflow-hidden md:h-screen md:overflow-hidden' : ''}`}>
+        <div className={`mx-auto w-full max-w-[1400px] ${path === '/pipeline' ? 'h-full' : 'space-y-6'}`}>{children}</div>
+      </main>
       <nav aria-label="Navegação principal" className={`fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-nav-line bg-nav-blur pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden`}>
         {ABAS.map(([href, label, Icon]) => (
           <Link key={href} href={href} onClick={() => setOpen(false)} className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${ativa(path, href) ? 'text-nav-accent-ink' : 'text-nav-ink3'}`}><Icon size={20} />{label}</Link>))}
