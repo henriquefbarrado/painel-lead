@@ -1,0 +1,96 @@
+
+name: Automatizar PR e merge
+
+on:
+  push:
+    branches:
+      - testes
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validar:
+    name: Validar projeto
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Executar testes
+        run: npm test
+
+      - name: Verificar TypeScript
+        run: npm run typecheck
+
+      - name: Gerar build de producao
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          OPENWEBNINJA_API_KEY: ${{ secrets.OPENWEBNINJA_API_KEY }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+
+  integrar:
+    name: Criar PR e integrar
+    needs: validar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar historico
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Criar PR e fazer merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          git fetch origin
+
+          if git diff --quiet origin/main origin/testes; then
+            echo "Nenhuma diferenca de arquivos para integrar."
+            exit 0
+          fi
+
+          PR_NUMBER="$(gh pr list \
+            --base main \
+            --head testes \
+            --state open \
+            --json number \
+            --jq '.[0].number')"
+
+          if [ -z "$PR_NUMBER" ]; then
+            PR_URL="$(gh pr create \
+              --base main \
+              --head testes \
+              --title "Atualizacoes automaticas de testes" \
+              --body "PR criado automaticamente apos os testes e a build passarem.")"
+
+            PR_NUMBER="${PR_URL##*/}"
+          fi
+
+          for attempt in $(seq 1 30); do
+            if gh pr merge "$PR_NUMBER" --squash; then
+              echo "PR #$PR_NUMBER integrado com sucesso."
+              exit 0
+            fi
+
+            echo "Merge bloqueado. Aguardando verificacoes..."
+            sleep 10
+          done
+
+          echo "PR criado, mas o merge nao foi concluido."
+          exit 1
