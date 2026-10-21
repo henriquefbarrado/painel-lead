@@ -7,6 +7,7 @@ import { ChipRetorno, dataBr } from './LeadCard'
 import { useToast } from './Toast'
 import { supabase } from '@/lib/supabase/client'
 import { todosLeads } from '@/lib/leads-api'
+import { expirarContatosSemResposta } from '@/lib/leads-acoes'
 import { ativo, dataHoje, situacaoFollowUp } from '@/lib/metricas'
 import { STATUS, STATUS_COR, naoAbordado, type Lead } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
@@ -19,6 +20,8 @@ export default function Hoje() {
   const [leads, setLeads] = useState<Lead[]>([]), [loading, setLoading] = useState(true)
   const { toast, aviso } = useToast(), usuario = useUsuario()
   const carregar = useCallback(async () => {
+    const exp = await expirarContatosSemResposta()
+    if (exp.movidos > 0) toast(`${exp.movidos} lead${exp.movidos > 1 ? 's' : ''} sem resposta há +48h → Sem interesse`, 'ok')
     const r = await todosLeads()
     if (r.error) toast('Erro ao carregar leads: ' + r.error, 'erro')
     setLeads(r.data); setLoading(false)

@@ -8,7 +8,7 @@ import { useVenda } from './VendaDialog'
 import { ChipRetorno } from './LeadCard'
 import { useToast } from './Toast'
 import { todosLeads } from '@/lib/leads-api'
-import { atualizarStatus } from '@/lib/leads-acoes'
+import { atualizarStatus, expirarContatosSemResposta } from '@/lib/leads-acoes'
 import { SEGMENTOS } from '@/lib/segmentos'
 import { FUNIL, STATUS, STATUS_PONTO, type Lead, type Status } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
@@ -25,6 +25,9 @@ export default function Pipeline() {
   const { toast, aviso } = useToast(), usuario = useUsuario(), { pedirVenda, vendaDialog } = useVenda()
 
   const carregar = useCallback(async () => {
+    // Antes de listar: leads em "Contato realizado" há +48h → Sem interesse ("Não respondeu")
+    const exp = await expirarContatosSemResposta()
+    if (exp.movidos > 0) toast(`${exp.movidos} lead${exp.movidos > 1 ? 's' : ''} sem resposta há +48h → Sem interesse`, 'ok')
     const r = await todosLeads()
     if (r.error) toast('Erro ao carregar leads: ' + r.error, 'erro')
     setLeads(r.data); setLoading(false)

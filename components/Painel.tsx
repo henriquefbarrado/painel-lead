@@ -18,7 +18,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { todosLeads } from '@/lib/leads-api'
-import { atualizarStatus } from '@/lib/leads-acoes'
+import { atualizarStatus, expirarContatosSemResposta } from '@/lib/leads-acoes'
 import { baixar } from '@/lib/exportar'
 import { leadsParaCsv } from '@/lib/leads-csv'
 import { chavesDoLead } from '@/lib/importar'
@@ -50,6 +50,8 @@ export default function Painel() {
   function trocarVista(v: 'cards' | 'tabela') { setVista(v); try { localStorage.setItem('vista-leads', v) } catch {} }
 
   const carregar = useCallback(async () => {
+    const exp = await expirarContatosSemResposta()
+    if (exp.movidos > 0) toast(`${exp.movidos} lead${exp.movidos > 1 ? 's' : ''} sem resposta há +48h → Sem interesse`, 'ok')
     const r = await todosLeads()
     if (r.error) toast('Erro ao carregar leads: ' + r.error, 'erro')
     setLeads(r.data); setLoading(false)
