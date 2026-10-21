@@ -4,3 +4,8 @@ node_modules
 
 .test-build
 tsconfig.tsbuildinfo
+
+.vercel
+.env
+.env*.local
+*.tsbuildinfo
