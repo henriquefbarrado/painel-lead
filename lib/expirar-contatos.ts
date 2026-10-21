@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /** Após este tempo em "Contato realizado" sem avanço → Sem interesse. */
-export const HORAS_SEM_RESPOSTA = 48
+export const HORAS_SEM_RESPOSTA = 24
 export const MOTIVO_NAO_RESPONDEU = 'Não respondeu'
 
 type Resultado = { movidos: number; erro: string | null }
