@@ -5,7 +5,7 @@ import { CalendarClock, Copy, ExternalLink, MapPin, MessageCircle, Phone, Ruler,
 import { SEGMENTOS, SOLUCOES } from '@/lib/segmentos'
 import { STATUS, STATUS_COR, type Lead } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
-import { mensagemDoLead, type Template } from '@/lib/templates'
+import { mensagemDoLead } from '@/lib/templates'
 import { situacaoFollowUp } from '@/lib/metricas'
 
 export const dataBr = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR')
@@ -16,14 +16,18 @@ export function ChipRetorno({ lead }: { lead: Pick<Lead, 'proximo_contato' | 'st
   return <span className={`lh-chip gap-1 ${cor}`}><CalendarClock size={12} />{s === 'atrasado' ? 'Retorno atrasado' : s === 'hoje' ? 'Retornar hoje' : 'Retorno ' + dataBr(lead.proximo_contato)}</span>
 }
 
-export default function LeadCard({ lead, dist, temRef, seuNome, templates, selecionando, selecionado, onSelect, onEdit, onDelete, toast }: {
-  lead: Lead; dist: number | null; temRef: boolean; seuNome: string; templates: Template[]
+export default function LeadCard({ lead, dist, temRef, seuNome, selecionando, selecionado, onSelect, onEdit, onDelete, toast }: {
+  lead: Lead; dist: number | null; temRef: boolean; seuNome: string
   selecionando?: boolean; selecionado?: boolean; onSelect?: () => void
   onEdit: () => void; onDelete: () => void; toast: (m: string) => void }) {
-  const [msg, setMsg] = useState(() => mensagemDoLead(lead, seuNome, templates))
+  const [msg, setMsg] = useState(() => mensagemDoLead(lead, seuNome))
   const [aberto, setAberto] = useState(false), [verMsg, setVerMsg] = useState(false)
   const tem = temMensagem(lead.status)
-  const nota = lead.status === 'convertido' ? 'Cliente fechado. Nenhuma mensagem de venda necessária.' : 'Sem interesse. Não enviar mais mensagens para este lead.'
+  const nota = lead.status === 'convertido'
+    ? 'Cliente fechado. Nenhuma mensagem de venda necessária.'
+    : lead.status === 'sem_interesse'
+      ? 'Lead marcado como sem interesse. Não enviar novas mensagens.'
+      : 'Esta etapa é uma etiqueta do funil. A mensagem padrão fica disponível no primeiro contato.'
   const semLoc = lead.latitude == null || lead.longitude == null
 
   async function copiar() {

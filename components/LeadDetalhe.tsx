@@ -16,7 +16,6 @@ import { SEGMENTOS, SOLUCOES } from '@/lib/segmentos'
 import { FUNIL, STATUS, STATUS_COR, naoAbordado, type Lead, type LeadInput, type Status } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
 import { mensagemDoLead } from '@/lib/templates'
-import { useTemplates } from '@/lib/useTemplates'
 import { useUsuario } from '@/lib/useUsuario'
 import { dataHoje } from '@/lib/metricas'
 
@@ -27,7 +26,7 @@ const maisDias = (n: number) => { const d = new Date(); d.setDate(d.getDate() + 
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function LeadDetalhe({ id }: { id: string }) {
-  const router = useRouter(), usuario = useUsuario(), { templates } = useTemplates(), { toast, aviso } = useToast(), { pedirVenda, vendaDialog } = useVenda()
+  const router = useRouter(), usuario = useUsuario(), { toast, aviso } = useToast(), { pedirVenda, vendaDialog } = useVenda()
   const [lead, setLead] = useState<Lead | null>(null), [loading, setLoading] = useState(true), [meuId, setMeuId] = useState('')
   const [contatos, setContatos] = useState<Contato[]>([]), [receitas, setReceitas] = useState<{ id: string; descricao: string; valor: number; situacao?: string }[]>([])
   const [msg, setMsg] = useState(''), [proximo, setProximo] = useState(''), [acao, setAcao] = useState('')
@@ -47,7 +46,7 @@ export default function LeadDetalhe({ id }: { id: string }) {
   }, [id])
   useEffect(() => { carregar() }, [carregar])
   useEffect(() => { supabase().auth.getUser().then(({ data }) => setMeuId(data.user?.id ?? '')) }, [])
-  const msgInicial = useMemo(() => (lead && usuario ? mensagemDoLead(lead, usuario.nome, templates) : ''), [lead, usuario, templates])
+  const msgInicial = useMemo(() => (lead && usuario ? mensagemDoLead(lead, usuario.nome) : ''), [lead, usuario])
   useEffect(() => { setMsg(msgInicial) }, [msgInicial])
 
   async function mudarStatus(s: Status, motivo?: string) {

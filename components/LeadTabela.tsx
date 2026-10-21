@@ -4,18 +4,18 @@ import { ExternalLink, MessageCircle, Pencil, Trash2 } from 'lucide-react'
 import { ChipRetorno } from './LeadCard'
 import { STATUS, STATUS_COR, type Lead } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
-import { mensagemDoLead, type Template } from '@/lib/templates'
+import { mensagemDoLead } from '@/lib/templates'
 
 // Visão compacta dos leads: uma linha por lead, ideal para listas grandes.
-export default function LeadTabela({ itens, temRef, seuNome, templates, selecionando, sel, onSelect, onEdit, onDelete, toast }: {
-  itens: { l: Lead; dist: number | null }[]; temRef: boolean; seuNome: string; templates: Template[]
+export default function LeadTabela({ itens, temRef, seuNome, selecionando, sel, onSelect, onEdit, onDelete, toast }: {
+  itens: { l: Lead; dist: number | null }[]; temRef: boolean; seuNome: string
   selecionando: boolean; sel: Set<string>; onSelect: (id: string) => void
   onEdit: (l: Lead) => void; onDelete: (l: Lead) => void; toast: (m: string, tipo?: 'ok' | 'erro') => void
 }) {
   function whats(l: Lead) {
     const num = whatsappNumber(l.whatsapp)
     if (!num) return toast('Este lead não tem WhatsApp válido', 'erro')
-    window.open(whatsappLink(num, mensagemDoLead(l, seuNome, templates)), '_blank', 'noopener')
+    window.open(whatsappLink(num, mensagemDoLead(l, seuNome)), '_blank', 'noopener')
   }
   const th = 'px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500'
   return (

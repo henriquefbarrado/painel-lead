@@ -13,7 +13,6 @@ import { SEGMENTOS } from '@/lib/segmentos'
 import { FUNIL, STATUS, STATUS_PONTO, type Lead, type Status } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
 import { mensagemDoLead } from '@/lib/templates'
-import { useTemplates } from '@/lib/useTemplates'
 import { useUsuario } from '@/lib/useUsuario'
 
 const POR_COLUNA = 30
@@ -23,7 +22,7 @@ export default function Pipeline() {
   const [busca, setBusca] = useState(''), [fSeg, setFSeg] = useState('')
   const [arrastando, setArrastando] = useState<string | null>(null), [sobre, setSobre] = useState<Status | null>(null)
   const [perdendo, setPerdendo] = useState<Lead | null>(null), [mais, setMais] = useState<Set<Status>>(new Set())
-  const { toast, aviso } = useToast(), usuario = useUsuario(), { templates } = useTemplates(), { pedirVenda, vendaDialog } = useVenda()
+  const { toast, aviso } = useToast(), usuario = useUsuario(), { pedirVenda, vendaDialog } = useVenda()
 
   const carregar = useCallback(async () => {
     const r = await todosLeads()
@@ -50,7 +49,7 @@ export default function Pipeline() {
   function whats(l: Lead) {
     const num = whatsappNumber(l.whatsapp)
     if (!num) return toast('Este lead não tem WhatsApp válido', 'erro')
-    window.open(whatsappLink(num, mensagemDoLead(l, usuario?.nome ?? '', templates)), '_blank', 'noopener')
+    window.open(whatsappLink(num, mensagemDoLead(l, usuario?.nome ?? '')), '_blank', 'noopener')
   }
 
   return (

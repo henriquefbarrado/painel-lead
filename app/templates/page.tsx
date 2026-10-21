@@ -1,3 +1,7 @@
-import Shell from '@/components/Shell'
-import TemplatesMensagem from '@/components/TemplatesMensagem'
-export default function Page() { return <Shell><TemplatesMensagem /></Shell> }
+import { redirect } from 'next/navigation'
+
+// A área de modelos de mensagem foi removida. Mantemos a rota antiga
+// redirecionando para o Pipeline para que links salvos não quebrem.
+export default function Page() {
+  redirect('/pipeline')
+}

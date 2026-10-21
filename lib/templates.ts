@@ -22,9 +22,12 @@ export function escolherTemplate(templates: Template[], status: Status, segmento
   return doStatus.find(t => segmento && t.segmento === segmento) ?? doStatus.find(t => !t.segmento) ?? null
 }
 
-// Mensagem final do lead. Só existe para os status que têm mensagem (sem_interesse e convertido ficam sem).
-export function mensagemDoLead(lead: Pick<Lead, 'nome_loja' | 'status' | 'segmento' | 'responsavel' | 'cidade'>, seuNome: string, templates: Template[] = []) {
-  if (!MESSAGES[lead.status]) return ''
-  const modelo = escolherTemplate(templates, lead.status, lead.segmento)?.texto ?? MESSAGES[lead.status]!
+// Mensagem final do lead. O primeiro contato usa sempre o texto padrão.
+// Mantemos o parâmetro de templates por compatibilidade com os componentes antigos,
+// mas modelos salvos anteriormente não substituem mais a mensagem padrão.
+// As demais etapas do funil são etiquetas/status e não geram mensagens automáticas.
+export function mensagemDoLead(lead: Pick<Lead, 'nome_loja' | 'status' | 'segmento' | 'responsavel' | 'cidade'>, seuNome: string, _templates: Template[] = []) {
+  const modelo = MESSAGES[lead.status]
+  if (!modelo) return ''
   return aplicarVariaveis(modelo, { nomeLoja: lead.nome_loja, seuNome, responsavel: lead.responsavel, cidade: lead.cidade })
 }

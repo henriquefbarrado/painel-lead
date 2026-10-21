@@ -12,8 +12,6 @@ import { useToast } from './Toast'
 import { temMensagem, whatsappNumber } from '@/lib/message-template'
 import { SEGMENTOS, SOLUCOES } from '@/lib/segmentos'
 import { useUsuario } from '@/lib/useUsuario'
-import { useTemplates } from '@/lib/useTemplates'
-import { mensagemDoLead } from '@/lib/templates'
 import Link from 'next/link'
 import { CheckSquare, Download, FileSpreadsheet, LayoutGrid, List, Plus, Search, SearchX, Send, Users } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -41,7 +39,6 @@ export default function Painel() {
   const [ordem, setOrdem] = useState<Ordem>('recentes'), [visiveis, setVisiveis] = useState(PAGINA)
   const [raio, setRaio] = useState(0), [refId, setRefId] = useState(''), [refLat, setRefLat] = useState(''), [refLng, setRefLng] = useState('')
   const usuario = useUsuario(), seuNome = usuario?.nome ?? ''
-  const { templates, pronto: templatesProntos } = useTemplates()
   const [form, setForm] = useState<{ lead: Lead | null } | null>(null)
   const [fila, setFila] = useState<Lead[] | null>(null)
   const [apagar, setApagar] = useState<Lead[] | null>(null)
@@ -197,7 +194,7 @@ export default function Painel() {
           <button className="btn text-red-600" disabled={!sel.size} onClick={() => setApagar(selecionados)}>Excluir</button>
         </div>)}
 
-      {loading || !usuario || !templatesProntos ? (
+      {loading || !usuario ? (
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3" aria-busy="true">{[0, 1, 2].map(i => <div key={i} className="card space-y-3 p-5"><div className="skeleton h-11 w-full" /><div className="skeleton h-4 w-3/4" /><div className="skeleton h-24 w-full" /></div>)}</div>
       ) : lista.length === 0 ? (
         leads.length === 0 ? (
@@ -218,18 +215,18 @@ export default function Painel() {
             </div>
           </div>
           {vista === 'tabela' ? (
-            <LeadTabela itens={lista.slice(0, visiveis)} temRef={!!ref} seuNome={seuNome} templates={templates} selecionando={selecionando} sel={sel} onSelect={alternar}
+            <LeadTabela itens={lista.slice(0, visiveis)} temRef={!!ref} seuNome={seuNome} selecionando={selecionando} sel={sel} onSelect={alternar}
               onEdit={l => setForm({ lead: l })} onDelete={l => setApagar([l])} toast={toast} />
           ) : (
           <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-            {lista.slice(0, visiveis).map(({ l, dist }) => <LeadCard key={l.id + l.status + templates.length} lead={l} dist={dist} temRef={!!ref} seuNome={seuNome} templates={templates}
+            {lista.slice(0, visiveis).map(({ l, dist }) => <LeadCard key={l.id + l.status} lead={l} dist={dist} temRef={!!ref} seuNome={seuNome}
               selecionando={selecionando} selecionado={sel.has(l.id)} onSelect={() => alternar(l.id)}
               onEdit={() => setForm({ lead: l })} onDelete={() => setApagar([l])} toast={toast} />)}
           </div>)}
           {visiveis < lista.length && <div className="text-center"><button className="btn" onClick={() => setVisiveis(v => v + PAGINA)}>Carregar mais ({lista.length - visiveis} restantes)</button></div>}
         </>)}
 
-      {fila && <FilaEnvio leads={fila} seuNome={seuNome} templates={templates} onSent={marcarEnviado} onClose={() => setFila(null)} />}
+      {fila && <FilaEnvio leads={fila} seuNome={seuNome} onSent={marcarEnviado} onClose={() => setFila(null)} />}
       {vendaDialog}
       {apagar && <ConfirmDialog titulo={apagar.length === 1 ? 'Excluir lead?' : `Excluir ${apagar.length} leads?`}
         texto={apagar.length === 1 ? `"${apagar[0].nome_loja}" será removido e essa ação não pode ser desfeita.` : 'Eles serão removidos junto com o histórico de contato, e essa ação não pode ser desfeita. Dica: exporte o CSV antes.'}

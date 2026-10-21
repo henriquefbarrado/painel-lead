@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { CalendarCheck, FileText, FileSpreadsheet, Kanban, LayoutDashboard, LogOut, Menu, Moon, ScrollText, PanelLeftClose, PanelLeftOpen, Search, Store, Sun, Users, Wallet, X, type LucideIcon } from 'lucide-react'
+import { CalendarCheck, FileSpreadsheet, Kanban, LayoutDashboard, LogOut, Menu, Moon, ScrollText, PanelLeftClose, PanelLeftOpen, Search, Store, Sun, Users, Wallet, X, type LucideIcon } from 'lucide-react'
 import CommandPalette from './CommandPalette'
 import { supabase } from '@/lib/supabase/client'
 import { useUsuario } from '@/lib/useUsuario'
@@ -12,7 +12,7 @@ const GRUPOS: { titulo: string; links: readonly (readonly [string, string, Lucid
   { titulo: '', links: [['/', 'Início', LayoutDashboard]] },
   { titulo: 'Vendas', links: [['/hoje', 'Hoje', CalendarCheck], ['/leads', 'Leads', Users], ['/pipeline', 'Pipeline', Kanban]] },
   { titulo: 'Captação', links: [['/buscar', 'Buscar lojas', Search], ['/importar', 'Importar', FileSpreadsheet]] },
-  { titulo: 'Gestão', links: [['/templates', 'Mensagens', FileText], ['/financeiro', 'Financeiro', Wallet]] },
+  { titulo: 'Gestão', links: [['/financeiro', 'Financeiro', Wallet]] },
 ]
 const LINKS = GRUPOS.flatMap(g => g.links)
 const ABAS = LINKS.filter(([h]) => ['/', '/hoje', '/leads', '/pipeline'].includes(h))

@@ -1,11 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { ativo, custoPorLead, receitaPorSegmento, repetirNoMes, situacaoFollowUp, somaTipo, taxaConversao, ticketMedio, type Lancamento } from '../lib/metricas'
-import { aplicarVariaveis, escolherTemplate, mensagemDoLead, type Template } from '../lib/templates'
+import { aplicarVariaveis, mensagemDoLead, type Template } from '../lib/templates'
 import { paraCsv } from '../lib/exportar'
 import { chavesDoLead, construirLeads, detectarMapeamento } from '../lib/importar'
 import { chaveBusca } from '../lib/cota'
-import { whatsappNumber } from '../lib/message-template'
+import { temMensagem, whatsappNumber } from '../lib/message-template'
 import { distanceKm } from '../lib/geo'
 import { lerPrecos, totalDaVenda } from '../lib/precos'
 
@@ -61,19 +61,23 @@ test('templates: variáveis novas e antigas', () => {
   assert.equal(aplicarVariaveis('{nome_loja} $& $1', v), 'Padaria $& $1') // sem interpretação de $ no valor
 })
 
-test('templates: prefere o do segmento, depois o geral, depois o padrão', () => {
-  const t: Template[] = [{ id: '1', nome: 'geral', segmento: null, status: 'novo', texto: 'G {nome_loja}' }, { id: '2', nome: 'beleza', segmento: 'beleza', status: 'novo', texto: 'B {nome_loja}' }]
-  assert.equal(escolherTemplate(t, 'novo', 'beleza')?.id, '2')
-  assert.equal(escolherTemplate(t, 'novo', 'loja')?.id, '1')
-  assert.equal(escolherTemplate(t, 'interessado', 'loja'), null)
+test('mensagem de primeiro contato é fixa e ignora templates antigos', () => {
+  const t: Template[] = [{ id: '1', nome: 'personalizado', segmento: 'beleza', status: 'novo', texto: 'Texto personalizado para {nome_loja}' }]
   const lead = { nome_loja: 'Salão', status: 'novo' as const, segmento: 'beleza', responsavel: null, cidade: null }
-  assert.equal(mensagemDoLead(lead, 'H', t), 'B Salão')
-  assert.match(mensagemDoLead({ ...lead, segmento: null }, 'H', []), /Salão/)
+  assert.match(mensagemDoLead(lead, 'Henrique', t), /Olá, tudo bem\? Aqui é o Henrique/)
+  assert.match(mensagemDoLead(lead, 'Henrique', t), /Vi a Salão/)
+  assert.doesNotMatch(mensagemDoLead(lead, 'Henrique', t), /Texto personalizado/)
+  assert.equal(mensagemDoLead({ ...lead, status: 'entrar_em_contato' }, 'Henrique', []), mensagemDoLead(lead, 'Henrique', []))
 })
 
-test('sem_interesse e convertido nunca geram mensagem', () => {
+test('as demais etapas são etiquetas e não geram mensagens automáticas', () => {
   const t: Template[] = [{ id: '1', nome: 'x', segmento: null, status: 'convertido' as never, texto: 'oi' }]
-  for (const status of ['sem_interesse', 'convertido'] as const) assert.equal(mensagemDoLead({ nome_loja: 'A', status, segmento: null, responsavel: null, cidade: null }, 'H', t), '')
+  assert.equal(temMensagem('novo'), true)
+  assert.equal(temMensagem('entrar_em_contato'), true)
+  for (const status of ['contato_realizado', 'interessado', 'negociacao', 'sem_interesse', 'convertido'] as const) {
+    assert.equal(temMensagem(status), false)
+    assert.equal(mensagemDoLead({ nome_loja: 'A', status, segmento: null, responsavel: null, cidade: null }, 'H', t), '')
+  }
 })
 
 test('CSV: escapa aspas/ponto-e-vírgula e bloqueia fórmulas', () => {

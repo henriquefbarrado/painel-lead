@@ -11,14 +11,13 @@ import { ativo, dataHoje, situacaoFollowUp } from '@/lib/metricas'
 import { STATUS, STATUS_COR, naoAbordado, type Lead } from '@/lib/types'
 import { temMensagem, whatsappLink, whatsappNumber } from '@/lib/message-template'
 import { mensagemDoLead } from '@/lib/templates'
-import { useTemplates } from '@/lib/useTemplates'
 import { useUsuario } from '@/lib/useUsuario'
 
 const maisDias = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return dataHoje(d) }
 
 export default function Hoje() {
   const [leads, setLeads] = useState<Lead[]>([]), [loading, setLoading] = useState(true)
-  const { toast, aviso } = useToast(), usuario = useUsuario(), { templates } = useTemplates()
+  const { toast, aviso } = useToast(), usuario = useUsuario()
   const carregar = useCallback(async () => {
     const r = await todosLeads()
     if (r.error) toast('Erro ao carregar leads: ' + r.error, 'erro')
@@ -41,7 +40,7 @@ export default function Hoje() {
   function whats(l: Lead) {
     const num = whatsappNumber(l.whatsapp)
     if (!num) return toast('Este lead não tem WhatsApp válido', 'erro')
-    window.open(whatsappLink(num, mensagemDoLead(l, usuario?.nome ?? '', templates)), '_blank', 'noopener')
+    window.open(whatsappLink(num, mensagemDoLead(l, usuario?.nome ?? '')), '_blank', 'noopener')
   }
   const linha = (l: Lead) => (
     <li key={l.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
