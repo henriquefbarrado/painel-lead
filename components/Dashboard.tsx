@@ -95,7 +95,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <PageHeader titulo="Início" sub="Resumo da sua prospecção, contatos e resultados." icone={<LayoutDashboard size={24} />}>
         <Link href="/hoje" className="btn-p"><CalendarCheck size={16} />Hoje{devidos > 0 ? ` (${devidos})` : ''}</Link>
-        <button className="btn-w" onClick={backup}><DatabaseBackup size={16} />Backup</button>
+        <button className="btn-w" onClick={backup}><DatabaseBackup size={16} />Baixar backup</button>
       </PageHeader>
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
