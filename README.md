@@ -59,11 +59,11 @@ Painel interno para quem vende **sites e páginas** para negócios locais. Ele c
 
 ```mermaid
 flowchart LR
-  A["🔎 Achar a loja<br/>sem site"] --> B["📋 Cadastrar<br/>o lead"]
-  B --> C["💬 Abrir o WhatsApp<br/>com mensagem pronta"]
-  C --> D["⏰ Follow-up<br/>no dia certo"]
-  D --> E["🤝 Fechar<br/>a venda"]
-  E --> F["💰 Receita lançada<br/>no financeiro"]
+  A["🔎 Achar a loja sem site"] --> B["📋 Cadastrar o lead"]
+  B --> C["💬 Abrir WhatsApp com mensagem pronta"]
+  C --> D["⏰ Follow-up no dia certo"]
+  D --> E["🤝 Fechar a venda"]
+  E --> F["💰 Receita no financeiro"]
   style A fill:#312e81,stroke:#818cf8,color:#fff
   style C fill:#065f46,stroke:#34d399,color:#fff
   style F fill:#7c2d12,stroke:#fb923c,color:#fff
@@ -116,7 +116,7 @@ stateDiagram-v2
   direction LR
   state "Contato realizado" as ContatoRealizado
   state "Sem interesse" as SemInteresse
-  [*] --> Novo: cadastro · importação · busca
+  [*] --> Novo: cadastro / importação / busca
   Novo --> ContatoRealizado: primeira mensagem enviada
   ContatoRealizado --> Interessado: respondeu com interesse
   ContatoRealizado --> SemInteresse: 24 h sem avançar (cron)
@@ -148,16 +148,16 @@ flowchart LR
   U(["👤 Usuário"]) -->|HTTPS| N
 
   subgraph VERCEL ["☁️ Vercel"]
-    N["Next.js 14<br/>App Router"] --> MW["middleware.ts<br/>sessão + rotas protegidas"]
+    N["Next.js 14 App Router"] --> MW["middleware.ts"]
     N --> API1["/api/buscar-lojas"]
     N --> API2["/api/cron/expirar-contatos"]
   end
 
-  N -->|"chave publishable + JWT do usuário<br/>(RLS)"| DB[("🗄️ Supabase<br/>Postgres + Auth")]
+  N -->|"publishable key + JWT (RLS)"| DB[("🗄️ Supabase Postgres + Auth")]
   API1 -->|"cota · cache · limite · logs"| DB
-  API1 -->|consulta| EXT["OpenWeb Ninja<br/>ou Google Places"]
+  API1 -->|consulta| EXT["OpenWeb Ninja / Google Places"]
   CRON(["⏰ Vercel Cron"]) -->|"Bearer CRON_SECRET"| API2
-  API2 -->|"service_role<br/>só no servidor"| DB
+  API2 -->|"service_role (servidor)"| DB
 
   style VERCEL fill:#0f172a,stroke:#6366f1,color:#e2e8f0
   style DB fill:#064e3b,stroke:#34d399,color:#fff
@@ -213,11 +213,11 @@ A chave do cache ignora acento, caixa e espaços repetidos, então `Barbearia` e
 
 ```mermaid
 flowchart TD
-  A(["Lead marcado como Convertido"]) --> B{"Já tem receita<br/>lançada?"}
-  B -->|sim| Z(["Nada a fazer · não duplica"])
-  B -->|não| C{"As soluções do lead<br/>têm preço cadastrado?"}
-  C -->|sim| D["Lança a receita sozinha<br/>como 'a receber'"]
-  D --> E["Aviso com Desfazer · Editar valor · Marcar recebido"]
+  A(["Lead marcado como Convertido"]) --> B{"Já tem receita lançada?"}
+  B -->|sim| Z(["Nada a fazer - não duplica"])
+  B -->|não| C{"Soluções têm preço?"}
+  C -->|sim| D["Lança receita como a receber"]
+  D --> E["Aviso: Desfazer / Editar / Marcar recebido"]
   C -->|não| F["Abre a janela pedindo o valor"]
   F --> G["Lança a receita"]
   style D fill:#065f46,stroke:#34d399,color:#fff
@@ -372,10 +372,10 @@ Um job da Vercel chama `GET /api/cron/expirar-contatos`. A rota confere o `Autho
 ```mermaid
 flowchart LR
   D["💻 Dev"] -->|"git push origin testes"| T["🌿 branch testes"]
-  T --> CI["🤖 GitHub Actions<br/>testes · typecheck · build"]
-  CI -->|"verde"| PR["🔀 PR automático<br/>+ merge na main"]
+  T --> CI["🤖 GitHub Actions"]
+  CI -->|"verde"| PR["🔀 PR + merge na main"]
   PR --> M["🌳 main"]
-  M -->|"deploy automático"| V["☁️ Vercel · produção"]
+  M -->|"deploy automático"| V["☁️ Vercel produção"]
   style CI fill:#312e81,stroke:#818cf8,color:#fff
   style V fill:#000,stroke:#fff,color:#fff
 ```
