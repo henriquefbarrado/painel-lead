@@ -6,6 +6,7 @@ import { CalendarCheck, FileSpreadsheet, Kanban, LayoutDashboard, LogOut, Menu, 
 import CommandPalette from './CommandPalette'
 import { supabase } from '@/lib/supabase/client'
 import { useUsuario } from '@/lib/useUsuario'
+import { useRetornos } from '@/lib/useRetornos'
 import { ehAdmin } from '@/lib/usuarios'
 import DefinirNome from './DefinirNome'
 
@@ -24,6 +25,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname(), router = useRouter()
   const [open, setOpen] = useState(false), [escuro, setEscuro] = useState(true), [compacto, setCompacto] = useState(false), [paleta, setPaleta] = useState(false)
   const u = useUsuario()
+  const retornos = useRetornos()
   const grupos = ehAdmin(u.email) ? GRUPOS.map(g => g.titulo === 'Gestão' ? { ...g, links: [...g.links, ['/logs', 'Logs de busca', ScrollText] as const] } : g) : GRUPOS
   useEffect(() => { setEscuro(document.documentElement.classList.contains('dark')); try { setCompacto(localStorage.getItem('menu') === 'compacto') } catch {} }, [])
   const tema = useCallback(() => { const d = document.documentElement.classList.toggle('dark'); setEscuro(d); localStorage.setItem('tema', d ? 'escuro' : 'claro') }, [])
@@ -66,11 +68,24 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                 {g.titulo && <p className={`mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-nav-ink4 ${esc}`}>{g.titulo}</p>}
                 {g.links.map(([href, label, Icon]) => {
                   const on = ativa(path, href)
+                  const badge = href === '/hoje' && retornos.total > 0 ? retornos.total : 0
                   return (
-                    <Link key={href} href={href} title={label} onClick={() => setOpen(false)} aria-current={on ? 'page' : undefined}
+                    <Link key={href} href={href} title={badge ? `${label} (${badge})` : label} onClick={() => setOpen(false)} aria-current={on ? 'page' : undefined}
                       className={`relative flex items-center gap-3 rounded-lg px-3 py-[7px] text-sm font-medium transition-colors ${compacto ? 'md:justify-center md:px-0' : ''} ${on ? 'bg-nav-active text-nav-ink' : 'hover:bg-nav-field hover:text-nav-ink'}`}>
                       {on && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r bg-nav-accent" />}
-                      <Icon size={18} className="shrink-0" /><span className={esc}>{label}</span></Link>)
+                      <span className="relative shrink-0">
+                        <Icon size={18} className="shrink-0" />
+                        {badge > 0 && compacto && (
+                          <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-0.5 text-[10px] font-bold text-white md:grid">{badge > 99 ? '99+' : badge}</span>
+                        )}
+                      </span>
+                      <span className={`flex min-w-0 flex-1 items-center justify-between gap-2 ${esc}`}>
+                        <span className="truncate">{label}</span>
+                        {badge > 0 && (
+                          <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-rose-500 px-1.5 text-[11px] font-bold text-white">{badge > 99 ? '99+' : badge}</span>
+                        )}
+                      </span>
+                    </Link>)
                 })}
               </div>))}
           </nav>
@@ -92,8 +107,20 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <div className={`mx-auto w-full max-w-[1400px] ${path === '/pipeline' ? 'h-full' : 'space-y-6'}`}>{children}</div>
       </main>
       <nav aria-label="Navegação principal" className={`fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-nav-line bg-nav-blur pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden`}>
-        {ABAS.map(([href, label, Icon]) => (
-          <Link key={href} href={href} onClick={() => setOpen(false)} className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${ativa(path, href) ? 'text-nav-accent-ink' : 'text-nav-ink3'}`}><Icon size={20} />{label}</Link>))}
+        {ABAS.map(([href, label, Icon]) => {
+          const badge = href === '/hoje' && retornos.total > 0 ? retornos.total : 0
+          return (
+            <Link key={href} href={href} onClick={() => setOpen(false)} className={`relative flex flex-col items-center gap-0.5 py-2 text-[11px] ${ativa(path, href) ? 'text-nav-accent-ink' : 'text-nav-ink3'}`}>
+              <span className="relative">
+                <Icon size={20} />
+                {badge > 0 && (
+                  <span className="absolute -right-2.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-0.5 text-[10px] font-bold text-white">{badge > 99 ? '99+' : badge}</span>
+                )}
+              </span>
+              {label}
+            </Link>
+          )
+        })}
         <button onClick={() => setOpen(!open)} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-nav-ink3"><Menu size={20} />Mais</button>
       </nav>
       <CommandPalette aberto={paleta} onAlternar={alternarPaleta} onFechar={fecharPaleta} paginas={grupos.flatMap(g => g.links)} escuro={escuro} onTema={tema} />

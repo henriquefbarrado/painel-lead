@@ -55,7 +55,9 @@ export default function Dashboard() {
 
   const porStatus = useMemo(() => contarPorStatus(leads), [leads])
   const funil = FUNIL.filter(s => s !== 'sem_interesse'), maxFunil = Math.max(1, ...funil.map(s => porStatus[s]))
-  const devidos = leads.filter(l => ativo(l.status) && ['hoje', 'atrasado'].includes(situacaoFollowUp(l.proximo_contato, hoje) ?? '')).length
+  const atrasados = leads.filter(l => ativo(l.status) && situacaoFollowUp(l.proximo_contato, hoje) === 'atrasado').length
+  const deHoje = leads.filter(l => ativo(l.status) && situacaoFollowUp(l.proximo_contato, hoje) === 'hoje').length
+  const devidos = atrasados + deHoje
   const porSeg = useMemo(() => {
     const m = new Map<string, number>(); leads.forEach(l => m.set(l.segmento || 'sem', (m.get(l.segmento || 'sem') || 0) + 1))
     return Array.from(m.entries()).sort((a, b) => b[1] - a[1])
@@ -93,6 +95,31 @@ export default function Dashboard() {
         <Link href="/hoje" className="btn-p"><CalendarCheck size={16} />Hoje{devidos > 0 ? ` (${devidos})` : ''}</Link>
         <button className="btn-w" onClick={backup}><DatabaseBackup size={16} />Baixar backup</button>
       </PageHeader>
+
+      {devidos > 0 && (
+        <Link
+          href="/hoje"
+          className="card flex flex-wrap items-center justify-between gap-3 border-rose-200 bg-rose-50 p-4 transition hover:border-rose-300 hover:bg-rose-100/80 dark:border-rose-900/50 dark:bg-rose-950/40 dark:hover:bg-rose-950/60"
+        >
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-500 text-white">
+              <CalendarCheck size={20} />
+            </span>
+            <div>
+              <p className="font-semibold text-rose-900 dark:text-rose-100">
+                {devidos === 1 ? '1 retorno para hoje' : `${devidos} retornos para atender`}
+              </p>
+              <p className="mt-0.5 text-sm text-rose-700/80 dark:text-rose-200/80">
+                {atrasados > 0 && <span className="font-medium">{atrasados} atrasado{atrasados > 1 ? 's' : ''}</span>}
+                {atrasados > 0 && deHoje > 0 && ' · '}
+                {deHoje > 0 && <span>{deHoje} de hoje</span>}
+                {!atrasados && !deHoje ? null : ' — abra a tela Hoje e faça o follow-up'}
+              </p>
+            </div>
+          </div>
+          <span className="btn-p shrink-0 !bg-rose-600 hover:!bg-rose-700">Ver Hoje →</span>
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Kpi titulo="Leads" valor={leads.length} rodape={<><span className="font-medium text-slate-700">+{leadsSem}</span> nos últimos 7 dias <Delta atual={leadsSem} anterior={leadsSemAnt} /></>} />
