@@ -7,6 +7,7 @@ import CommandPalette from './CommandPalette'
 import { supabase } from '@/lib/supabase/client'
 import { useUsuario } from '@/lib/useUsuario'
 import { ehAdmin } from '@/lib/usuarios'
+import DefinirNome from './DefinirNome'
 
 const GRUPOS: { titulo: string; links: readonly (readonly [string, string, LucideIcon])[] }[] = [
   { titulo: '', links: [['/', 'Início', LayoutDashboard]] },
@@ -23,7 +24,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname(), router = useRouter()
   const [open, setOpen] = useState(false), [escuro, setEscuro] = useState(true), [compacto, setCompacto] = useState(false), [paleta, setPaleta] = useState(false)
   const u = useUsuario()
-  const grupos = ehAdmin(u?.email) ? GRUPOS.map(g => g.titulo === 'Gestão' ? { ...g, links: [...g.links, ['/logs', 'Logs de busca', ScrollText] as const] } : g) : GRUPOS
+  const grupos = ehAdmin(u.email) ? GRUPOS.map(g => g.titulo === 'Gestão' ? { ...g, links: [...g.links, ['/logs', 'Logs de busca', ScrollText] as const] } : g) : GRUPOS
   useEffect(() => { setEscuro(document.documentElement.classList.contains('dark')); try { setCompacto(localStorage.getItem('menu') === 'compacto') } catch {} }, [])
   const tema = useCallback(() => { const d = document.documentElement.classList.toggle('dark'); setEscuro(d); localStorage.setItem('tema', d ? 'escuro' : 'claro') }, [])
   function alternarMenu() { const c = !compacto; setCompacto(c); try { localStorage.setItem('menu', c ? 'compacto' : 'aberto') } catch {} }
@@ -38,6 +39,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       <div className={`min-w-0 leading-tight ${esc}`}><p className="truncate whitespace-nowrap text-sm font-semibold text-nav-ink">Painel de Leads</p><p className="truncate whitespace-nowrap text-xs text-nav-ink3">Prospecção & vendas</p></div>
     </div>
   )
+  // Primeiro login: obriga a definir o nome usado nas mensagens do WhatsApp
+  if (!u.carregando && u.precisaNome) {
+    return <DefinirNome email={u.email} onSalvar={u.definirNome} />
+  }
+
   return (
     <div className="min-h-screen md:flex">
       <div className={`flex items-center justify-between ${NAV} px-4 py-3 md:hidden`}>
@@ -70,8 +76,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </nav>
           <div className={`mt-3 shrink-0 space-y-2 rounded-xl bg-nav-field p-2.5 ring-1 ring-nav-line ${compacto ? 'md:mt-2 md:space-y-0.5 md:rounded-none md:border-t md:border-nav-line md:bg-transparent md:p-0 md:pt-2 md:ring-0' : ''}`}>
             <div className={`flex items-center gap-2.5 ${compacto ? 'md:justify-center' : ''}`}>
-              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-nav-avatar text-sm font-semibold text-nav-avatar-ink">{(u?.nome[0] || '?').toUpperCase()}</div>
-              <div className={`min-w-0 leading-tight ${esc}`}><p className="truncate text-sm font-medium text-nav-ink">{u?.nome ?? '…'}</p><p className="truncate text-[11px] text-nav-ink3">{u?.email}</p></div>
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-nav-avatar text-sm font-semibold text-nav-avatar-ink">{(u.nome[0] || '?').toUpperCase()}</div>
+              <div className={`min-w-0 leading-tight ${esc}`}><p className="truncate text-sm font-medium text-nav-ink">{u.nome ?? '…'}</p><p className="truncate text-[11px] text-nav-ink3">{u.email}</p></div>
             </div>
             <div className={`grid gap-1.5 ${compacto ? 'md:grid-cols-1 md:gap-0.5' : 'grid-cols-2'}`}>
               <button className={`flex h-9 items-center justify-center gap-2 rounded-lg bg-nav-field text-sm text-nav-ink2 transition hover:bg-nav-hover hover:text-nav-ink ${compacto ? 'md:h-8 md:bg-transparent md:text-nav-ink2' : ''}`} onClick={tema} title={escuro ? 'Tema claro' : 'Tema escuro'} aria-label={escuro ? 'Tema claro' : 'Tema escuro'}>{escuro ? <Sun size={17} className="shrink-0" /> : <Moon size={17} className="shrink-0" />}<span className={esc}>{escuro ? 'Claro' : 'Escuro'}</span></button>

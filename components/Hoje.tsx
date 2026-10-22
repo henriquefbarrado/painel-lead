@@ -43,7 +43,7 @@ export default function Hoje() {
   function whats(l: Lead) {
     const num = whatsappNumber(l.whatsapp)
     if (!num) return toast('Este lead não tem WhatsApp válido', 'erro')
-    window.open(whatsappLink(num, mensagemDoLead(l, usuario?.nome ?? '')), '_blank', 'noopener')
+    window.open(whatsappLink(num, mensagemDoLead(l, usuario.nome)), '_blank', 'noopener')
   }
   const linha = (l: Lead) => (
     <li key={l.id} className="flex flex-wrap items-center justify-between gap-3 py-3">

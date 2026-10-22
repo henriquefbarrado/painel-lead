@@ -48,7 +48,7 @@ export default function LeadDetalhe({ id }: { id: string }) {
   }, [id])
   useEffect(() => { carregar() }, [carregar])
   useEffect(() => { supabase().auth.getUser().then(({ data }) => setMeuId(data.user?.id ?? '')) }, [])
-  const msgInicial = useMemo(() => (lead && usuario ? mensagemDoLead(lead, usuario.nome) : ''), [lead, usuario])
+  const msgInicial = useMemo(() => (lead && !usuario.carregando ? mensagemDoLead(lead, usuario.nome) : ''), [lead, usuario])
   useEffect(() => { setMsg(msgInicial) }, [msgInicial])
 
   async function mudarStatus(s: Status, motivo?: string) {
@@ -64,7 +64,7 @@ export default function LeadDetalhe({ id }: { id: string }) {
     setProximo(data); toast('Follow-up salvo', 'ok'); carregar()
   }
   async function registrar(t: TipoContato, n: string, q: string, avancar = false) {
-    if (!usuario || !lead) return
+    if (usuario.carregando || !lead) return
     setSalvando(true)
     const iso = new Date(q).toISOString()
     const { error } = await supabase().from('contatos').insert({ lead_id: id, user_nome: usuario.nome, user_email: usuario.email, tipo: t, nota: n.trim() || null, contatado_em: iso })
@@ -160,7 +160,7 @@ export default function LeadDetalhe({ id }: { id: string }) {
                 <label className="block text-sm">Data e hora<input type="datetime-local" required className="inp mt-1" value={quando} onChange={e => setQuando(e.target.value)} /></label>
               </div>
               <textarea className="inp" rows={3} placeholder="O que foi conversado, próximo passo…" value={nota} onChange={e => setNota(e.target.value)} aria-label="Anotação" />
-              <button className="btn-p w-full" disabled={salvando || !usuario}>{salvando ? 'Salvando…' : 'Registrar contato'}</button>
+              <button className="btn-p w-full" disabled={salvando || usuario.carregando}>{salvando ? 'Salvando…' : 'Registrar contato'}</button>
             </form>
             {contatos.length === 0 ? <p className="text-sm text-slate-500">Nenhum contato registrado ainda.</p> : (
               <ul className="lh-linha-tempo">{contatos.map(c => { const I = ICONES[c.tipo] ?? StickyNote; return (

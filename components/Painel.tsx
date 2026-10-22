@@ -38,7 +38,7 @@ export default function Painel() {
   const [fRetorno, setFRetorno] = useState(params.get('retorno') || '')
   const [ordem, setOrdem] = useState<Ordem>('recentes'), [visiveis, setVisiveis] = useState(PAGINA)
   const [raio, setRaio] = useState(0), [refId, setRefId] = useState(''), [refLat, setRefLat] = useState(''), [refLng, setRefLng] = useState('')
-  const usuario = useUsuario(), seuNome = usuario?.nome ?? ''
+  const usuario = useUsuario(), seuNome = usuario.nome
   const [form, setForm] = useState<{ lead: Lead | null } | null>(null)
   const [fila, setFila] = useState<Lead[] | null>(null)
   const [apagar, setApagar] = useState<Lead[] | null>(null)
@@ -196,7 +196,7 @@ export default function Painel() {
           <button className="btn text-red-600" disabled={!sel.size} onClick={() => setApagar(selecionados)}>Excluir</button>
         </div>)}
 
-      {loading || !usuario ? (
+      {loading || usuario.carregando ? (
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3" aria-busy="true">{[0, 1, 2].map(i => <div key={i} className="card space-y-3 p-5"><div className="skeleton h-11 w-full" /><div className="skeleton h-4 w-3/4" /><div className="skeleton h-24 w-full" /></div>)}</div>
       ) : lista.length === 0 ? (
         leads.length === 0 ? (
