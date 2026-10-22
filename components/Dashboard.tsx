@@ -60,10 +60,6 @@ export default function Dashboard() {
     const m = new Map<string, number>(); leads.forEach(l => m.set(l.segmento || 'sem', (m.get(l.segmento || 'sem') || 0) + 1))
     return Array.from(m.entries()).sort((a, b) => b[1] - a[1])
   }, [leads])
-  const motivos = useMemo(() => {
-    const m = new Map<string, number>(); leads.filter(l => l.status === 'sem_interesse' && l.motivo_perda).forEach(l => m.set(l.motivo_perda!, (m.get(l.motivo_perda!) || 0) + 1))
-    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5)
-  }, [leads])
   const dias = useMemo(() => Array.from({ length: 7 }, (_, k) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - k)); const key = dataHoje(d)
     return { key, nome: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''), n: contatos.filter(c => dataHoje(new Date(c.contatado_em)) === key).length }
@@ -124,7 +120,6 @@ export default function Dashboard() {
                 <div className="flex justify-between text-sm"><span className={`lh-chip ${STATUS_COR[s]}`}>{STATUS[s]}</span>
                   <span><b>{porStatus[s]}</b>{i > 0 && porStatus[funil[i - 1]] > 0 && <span className="ml-2 text-xs text-slate-500">{Math.round((porStatus[s] / porStatus[funil[i - 1]]) * 100)}% da etapa anterior</span>}</span></div>
                 <div className="h-2.5 overflow-hidden rounded-full bg-slate-200"><div className={`h-full ${COR_BARRA[s]}`} style={{ width: `${(porStatus[s] / maxFunil) * 100}%` }} /></div></Link>))}
-          {porStatus.sem_interesse > 0 && <p className="border-t pt-3 text-sm text-slate-500"><b>{porStatus.sem_interesse}</b> sem interesse{motivos.length > 0 && <>. Principais motivos: {motivos.map(([m, n]) => `${m} (${n})`).join(', ')}</>}</p>}
         </section>
         <section className="card space-y-3 p-5"><h2 className="font-semibold">Leads por segmento</h2>
           {porSeg.length === 0 ? <p className="text-sm text-slate-500">Nenhum lead cadastrado.</p> : porSeg.map(([k, n]) => (
