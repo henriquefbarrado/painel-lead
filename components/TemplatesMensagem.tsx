@@ -20,7 +20,7 @@ export default function TemplatesMensagem() {
   const [f, setF] = useState<typeof vazio | null>(null), [apagar, setApagar] = useState<Template | null>(null), [busy, setBusy] = useState(false)
   const area = useRef<HTMLTextAreaElement>(null)
 
-  const previa = useMemo(() => f ? aplicarVariaveis(f.texto, { nomeLoja: 'Padaria Central', seuNome: usuario?.nome ?? 'Seu Nome', responsavel: 'Ana', cidade: 'Belo Horizonte' }) : '', [f, usuario])
+  const previa = useMemo(() => f ? aplicarVariaveis(f.texto, { nomeLoja: 'Padaria Central', seuNome: usuario.nome || 'Seu Nome', responsavel: 'Ana', cidade: 'Belo Horizonte' }) : '', [f, usuario])
   function inserir(v: string) {
     const el = area.current; if (!el || !f) return
     const a = el.selectionStart ?? f.texto.length, b = el.selectionEnd ?? a
